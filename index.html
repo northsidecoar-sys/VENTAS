@@ -338,57 +338,94 @@ const dbTienda  = getFirestore(tiendaApp);
 const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA2YzVkMDQ5NTExYTQyNDg5NjQzYjkzNDIxNjYxNjhhIiwiaCI6Im11cm11cjY0In0=';
 const ORIGEN  = { lon: -58.6927, lat: -34.3914 };
 
+// Precios de compra locales (privados, no estan en la tienda publica)
+const COSTOS_COMPRA = [
+  {n:"campera smooth",             c:31000},
+  {n:"buzo boxi smooth",           c:27000},
+  {n:"frisa cuello redondo",       c:23000},
+  {n:"baggy black",                c:25000},
+  {n:"baggy oxide",                c:27000},
+  {n:"baggy moustage",             c:26000},
+  {n:"baggy premium tokio",        c:19500},
+  {n:"baggy frizado",              c:22000},
+  {n:"campera frisa",              c:16000},
+  {n:"frisado arallado",           c:24000},
+  {n:"joggin baggy cool",          c:25000},
+  {n:"baby tee",                   c:6000},
+  {n:"musculosas tokio",           c:10000},
+  {n:"remera boxi arallada",       c:16000},
+  {n:"remera lisa over",           c:12000},
+  {n:"boxi fit lisa",              c:10000},
+  {n:"remera slim",                c:9000},
+  {n:"remera boxi fit",            c:4200},
+  {n:"remera comun lisa",          c:4200},
+  {n:"frisado over smooth",        c:13500},
+  {n:"rustico merlin",             c:23000},
+  {n:"bermuda baggy",              c:10000},
+  {n:"buzo oversize",              c:27000},
+];
+
 // Productos cargados desde Firebase de la tienda (se actualizan solos)
 let PRODS = [];
 
 async function cargarProductosDeTienda() {
   try {
     const snap = await getDocs(collection(dbTienda, 'products'));
-    const prodsTienda = snap.docs.map(d => d.data()).filter(p => p.name);
+    const prodsTienda = snap.docs.map(d => d.data()).filter(p => p.name && p.price > 0);
     prodsTienda.sort((a,b) => (a.order||0) - (b.order||0));
-    // La tienda tiene: p.name (nombre) y p.price (precio venta publico)
-    // El precio de compra no esta en la tienda (es privado), se pone 0 y se puede editar
-    PRODS = prodsTienda.map(p => ({
-      n: p.name,
-      c: p.costPrice || p.cost || 0,  // si en el futuro agrega costo lo toma automatico
-      v: p.price || 0,
-    })).filter(p => p.n && p.v > 0);
-    // Si no hay productos en la tienda, usar lista de respaldo
+
+    // Combinar: precio de venta de la tienda + precio de compra de la lista local
+    PRODS = prodsTienda.map(p => {
+      // Buscar si tenemos el precio de compra en la lista de respaldo (por nombre similar)
+      const nombreNorm = p.name.toLowerCase().trim();
+      const local = COSTOS_COMPRA.find(l => {
+        const localNorm = l.n.toLowerCase().trim();
+        return nombreNorm.includes(localNorm) || localNorm.includes(nombreNorm) ||
+               nombreNorm.replace(/\s/g,'').includes(localNorm.replace(/\s/g,''));
+      });
+      const precioBase = p.price || 0;
+      const precioTransferencia = Math.round(precioBase * 0.80); // 20% descuento transferencia
+      return {
+        n: p.name,
+        c: p.costPrice || p.cost || (local ? local.c : 0),
+        v: precioTransferencia,
+      };
+    });
+
     if (!PRODS.length) usarProdsRespaldo();
     console.log('Productos cargados desde tienda:', PRODS.length);
   } catch(e) {
     console.warn('No se pudo conectar con la tienda, usando lista local:', e);
     usarProdsRespaldo();
   }
-  // Actualizar selects de productos existentes
   actualizarSelectsProductos();
 }
 
 function usarProdsRespaldo() {
   PRODS = [
-    {n:"Campera Smooth Premium",      c:31000,v:36000},
-    {n:"Buzo Boxi Smooth",           c:27000,v:35000},
-    {n:"Frisa Cuello Redondo",       c:23000,v:30000},
-    {n:"Baggy Black",                c:25000,v:35000},
-    {n:"Baggy Oxide",                c:27000,v:35000},
-    {n:"Baggy Moustage",             c:26000,v:35000},
-    {n:"Baggy Premium Tokio Joggin", c:19500,v:25000},
-    {n:"Baggy Frizado Unisex",       c:22000,v:35000},
-    {n:"Campera Frisa Comun",        c:16000,v:25000},
-    {n:"Frisado Arallado",           c:24000,v:28000},
-    {n:"Joggin Baggy Cool Premium",  c:25000,v:30000},
-    {n:"Baby Tee de Mujer",          c:6000, v:13000},
-    {n:"Musculosas Tokio",           c:10000,v:15000},
-    {n:"Remera Boxi Arallada",       c:16000,v:23000},
-    {n:"Remera Lisa Over",           c:12000,v:16000},
-    {n:"Boxi Fit Lisa",              c:10000,v:15000},
-    {n:"Remera Slim Hombre",         c:9000, v:15000},
-    {n:"Remera Boxi Fit T.Unico",    c:4200, v:13000},
-    {n:"Remera Comun Lisa T.Unico",  c:4200, v:13000},
-    {n:"Frisado Over Smooth",        c:13500,v:21000},
-    {n:"Rustico Merlin",             c:23000,v:28000},
-    {n:"Bermuda Baggy Joggin",       c:10000,v:18000},
-    {n:"Buzo Oversize",              c:27000,v:25000},
+    {n:"Campera Smooth Premium",      c:31000,v:28800},
+    {n:"Buzo Boxi Smooth",           c:27000,v:28000},
+    {n:"Frisa Cuello Redondo",       c:23000,v:24000},
+    {n:"Baggy Black",                c:25000,v:28000},
+    {n:"Baggy Oxide",                c:27000,v:28000},
+    {n:"Baggy Moustage",             c:26000,v:28000},
+    {n:"Baggy Premium Tokio Joggin", c:19500,v:20000},
+    {n:"Baggy Frizado Unisex",       c:22000,v:28000},
+    {n:"Campera Frisa Comun",        c:16000,v:20000},
+    {n:"Frisado Arallado",           c:24000,v:22400},
+    {n:"Joggin Baggy Cool Premium",  c:25000,v:24000},
+    {n:"Baby Tee de Mujer",          c:6000, v:10400},
+    {n:"Musculosas Tokio",           c:10000,v:12000},
+    {n:"Remera Boxi Arallada",       c:16000,v:18400},
+    {n:"Remera Lisa Over",           c:12000,v:12800},
+    {n:"Boxi Fit Lisa",              c:10000,v:12000},
+    {n:"Remera Slim Hombre",         c:9000, v:12000},
+    {n:"Remera Boxi Fit T.Unico",    c:4200, v:10400},
+    {n:"Remera Comun Lisa T.Unico",  c:4200, v:10400},
+    {n:"Frisado Over Smooth",        c:13500,v:16800},
+    {n:"Rustico Merlin",             c:23000,v:22400},
+    {n:"Bermuda Baggy Joggin",       c:10000,v:14400},
+    {n:"Buzo Oversize",              c:27000,v:20000},
   ];
 }
 
