@@ -308,48 +308,98 @@
 <!-- Firebase -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getFirestore, collection, addDoc, onSnapshot, deleteDoc, doc, query, orderBy, updateDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-const firebaseConfig = {
+// ── App de VENTAS (guarda las ventas) ──
+const ventasConfig = {
   apiKey: "AIzaSyBurfHfzB9fTyqEVHnWN5Qq45dQXhgdZt4",
   authDomain: "lista-de-compras-northside.firebaseapp.com",
-  databaseURL: "https://lista-de-compras-northside-default-rtdb.firebaseio.com",
   projectId: "lista-de-compras-northside",
   storageBucket: "lista-de-compras-northside.firebasestorage.app",
   messagingSenderId: "431387142076",
   appId: "1:431387142076:web:a4ff1475459c170da8edb9"
 };
 
-const app = initializeApp(firebaseConfig);
-const db  = getFirestore(app);
+// ── App de la TIENDA (lee productos y precios) ──
+const tiendaConfig = {
+  apiKey: "AIzaSyCrrRHfl74d1HPw7QAF1ThXXG-jOef6p14",
+  authDomain: "northside-store.firebaseapp.com",
+  projectId: "northside-store",
+  storageBucket: "northside-store.firebasestorage.app",
+  messagingSenderId: "981566962809",
+  appId: "1:981566962809:web:d7c9a18f8ed490f7b9a8a8"
+};
+
+const ventasApp = initializeApp(ventasConfig, "ventas");
+const tiendaApp = initializeApp(tiendaConfig, "tienda");
+const db        = getFirestore(ventasApp);
+const dbTienda  = getFirestore(tiendaApp);
 
 const ORS_KEY = 'eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6IjA2YzVkMDQ5NTExYTQyNDg5NjQzYjkzNDIxNjYxNjhhIiwiaCI6Im11cm11cjY0In0=';
 const ORIGEN  = { lon: -58.6927, lat: -34.3914 };
 
-const PRODS = [
-  {n:"Campera Smooth",             c:30000,v:36000},
-  {n:"Buzo Boxi Smooth",           c:27000,v:35000},
-  {n:"Frisa Cuello Redondo",       c:23000,v:30000},
-  {n:"Baggy Black",                c:25000,v:35000},
-  {n:"Baggy Oxide",                c:27000,v:35000},
-  {n:"Baggy Moustage",             c:27000,v:35000},
-  {n:"Baggy Premium Tokio Joggin", c:17000,v:25000},
-  {n:"Campera Frisa Comun",        c:16000,v:25000},
-  {n:"Frisado Arallado",           c:24000,v:28000},
-  {n:"Joggin Baggy Cool Premium",  c:25000,v:30000},
-  {n:"Baby Tee de Mujer",          c:6000, v:13000},
-  {n:"Musculosas Tokio",           c:10000,v:15000},
-  {n:"Remera Boxi Arallada",       c:16000,v:23000},
-  {n:"Remera Lisa Over",           c:12000,v:16000},
-  {n:"Boxi Fit Lisa",              c:10000,v:15000},
-  {n:"Remera Slim Hombre",         c:9000, v:15000},
-  {n:"Remera Boxi Fit T.Unico",    c:4200, v:13000},
-  {n:"Remera Comun Lisa T.Unico",  c:4200, v:13000},
-  {n:"Frisado Over Smooth",        c:13500,v:21000},
-  {n:"Rustico Merlin",             c:23000,v:28000},
-  {n:"Bermuda Baggy Joggin",       c:10000,v:18000},
-  {n:"Buzo Oversize",              c:20000,v:25000},
-];
+// Productos cargados desde Firebase de la tienda (se actualizan solos)
+let PRODS = [];
+
+async function cargarProductosDeTienda() {
+  try {
+    const snap = await getDocs(collection(dbTienda, 'products'));
+    const prodsTienda = snap.docs.map(d => d.data()).filter(p => p.name);
+    prodsTienda.sort((a,b) => (a.order||0) - (b.order||0));
+    // La tienda tiene: p.name (nombre) y p.price (precio venta publico)
+    // El precio de compra no esta en la tienda (es privado), se pone 0 y se puede editar
+    PRODS = prodsTienda.map(p => ({
+      n: p.name,
+      c: p.costPrice || p.cost || 0,  // si en el futuro agrega costo lo toma automatico
+      v: p.price || 0,
+    })).filter(p => p.n && p.v > 0);
+    // Si no hay productos en la tienda, usar lista de respaldo
+    if (!PRODS.length) usarProdsRespaldo();
+    console.log('Productos cargados desde tienda:', PRODS.length);
+  } catch(e) {
+    console.warn('No se pudo conectar con la tienda, usando lista local:', e);
+    usarProdsRespaldo();
+  }
+  // Actualizar selects de productos existentes
+  actualizarSelectsProductos();
+}
+
+function usarProdsRespaldo() {
+  PRODS = [
+    {n:"Campera Smooth Premium",      c:31000,v:36000},
+    {n:"Buzo Boxi Smooth",           c:27000,v:35000},
+    {n:"Frisa Cuello Redondo",       c:23000,v:30000},
+    {n:"Baggy Black",                c:25000,v:35000},
+    {n:"Baggy Oxide",                c:27000,v:35000},
+    {n:"Baggy Moustage",             c:26000,v:35000},
+    {n:"Baggy Premium Tokio Joggin", c:19500,v:25000},
+    {n:"Baggy Frizado Unisex",       c:22000,v:35000},
+    {n:"Campera Frisa Comun",        c:16000,v:25000},
+    {n:"Frisado Arallado",           c:24000,v:28000},
+    {n:"Joggin Baggy Cool Premium",  c:25000,v:30000},
+    {n:"Baby Tee de Mujer",          c:6000, v:13000},
+    {n:"Musculosas Tokio",           c:10000,v:15000},
+    {n:"Remera Boxi Arallada",       c:16000,v:23000},
+    {n:"Remera Lisa Over",           c:12000,v:16000},
+    {n:"Boxi Fit Lisa",              c:10000,v:15000},
+    {n:"Remera Slim Hombre",         c:9000, v:15000},
+    {n:"Remera Boxi Fit T.Unico",    c:4200, v:13000},
+    {n:"Remera Comun Lisa T.Unico",  c:4200, v:13000},
+    {n:"Frisado Over Smooth",        c:13500,v:21000},
+    {n:"Rustico Merlin",             c:23000,v:28000},
+    {n:"Bermuda Baggy Joggin",       c:10000,v:18000},
+    {n:"Buzo Oversize",              c:27000,v:25000},
+  ];
+}
+
+function actualizarSelectsProductos() {
+  document.querySelectorAll('.product-row select').forEach(sel => {
+    const valActual = sel.value;
+    const opts = PRODS.map((p,i) => `<option value="${i}">${p.n}</option>`).join('');
+    sel.innerHTML = `<option value="">— Elegir producto —</option>${opts}`;
+    sel.value = valActual;
+  });
+}
 
 const VEHS = {
   corolla:{n:"Toyota Corolla 2011",km:10},
@@ -721,7 +771,7 @@ function toastOk(m){
 }
 
 // INIT
-addProd();
+cargarProductosDeTienda().then(() => addProd());
 
 </script>
 </body>
