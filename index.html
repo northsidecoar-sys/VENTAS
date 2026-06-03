@@ -1355,19 +1355,19 @@ function renderAdminProducts() {
     const imgs = p.imgs || [];
     const thumb = imgs.length > 0 ? '<img src="'+(imgs[0].url||imgs[0].data||'')+'" style="width:56px;height:56px;object-fit:cover;border-radius:6px;border:1px solid var(--border)">' : '<div style="width:56px;height:56px;background:var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center">🧥</div>';
     const stockInfo = p.stock ? Object.entries(p.stock).map(([k,v]) => k+': '+v).join(' · ') : 'Sin stock cargado';
-    return \`<div class="product-admin-card">
+    return `<div class="product-admin-card">
       <div class="product-admin-header">
-        <div style="display:flex;align-items:center;gap:0.8rem">\${thumb}<div>
-          <div class="product-admin-name">\${p.name||'Sin nombre'}</div>
-          <div style="font-size:0.72rem;color:var(--muted)">\${p.cat||''} · $\${Number(p.price||0).toLocaleString('es-AR')}</div>
-          <div style="font-size:0.68rem;color:var(--muted);margin-top:0.2rem">📦 \${stockInfo}</div>
+        <div style="display:flex;align-items:center;gap:0.8rem">${thumb}<div>
+          <div class="product-admin-name">${p.name||'Sin nombre'}</div>
+          <div style="font-size:0.72rem;color:var(--muted)">${p.cat||''} · $${Number(p.price||0).toLocaleString('es-AR')}</div>
+          <div style="font-size:0.68rem;color:var(--muted);margin-top:0.2rem">📦 ${stockInfo}</div>
         </div></div>
         <div style="display:flex;gap:0.4rem">
-          <button class="admin-btn" style="padding:0.35rem 0.7rem;font-size:0.72rem" onclick="editProduct('\${p._docId}')">✏ Editar</button>
-          <button class="admin-btn danger" style="padding:0.35rem 0.7rem;font-size:0.72rem" onclick="deleteProduct('\${p._docId}','\${p.name}')">✕</button>
+          <button class="admin-btn" style="padding:0.35rem 0.7rem;font-size:0.72rem" onclick="editProduct('${p._docId}')">✏ Editar</button>
+          <button class="admin-btn danger" style="padding:0.35rem 0.7rem;font-size:0.72rem" onclick="deleteProduct('${p._docId}','${p.name}')">✕</button>
         </div>
       </div>
-    </div>\`;
+    </div>`;
   }).join('');
 }
 
@@ -1449,24 +1449,24 @@ function renderStockPanel() {
     const stockItems = variants.map(v => {
       const qty = parseInt(stock[v.key] || stock[v.size] || 0);
       const cls = qty === 0 ? 'stock-zero' : qty <= 2 ? 'stock-low' : '';
-      return \`<div class="stock-item \${cls}" data-key="\${v.key}" data-pid="\${p._docId}">
-        <div class="stock-label">\${v.key}</div>
+      return `<div class="stock-item ${cls}" data-key="${v.key}" data-pid="${p._docId}">
+        <div class="stock-label">${v.key}</div>
         <div class="stock-controls">
-          <button onclick="changeStockQty('\${p._docId}','\${v.key}',-1)">−</button>
-          <input type="number" min="0" value="\${qty}" id="stock-\${p._docId}-\${v.key.replace(/[^a-z0-9]/gi,'_')}" onchange="markStockDirty('\${p._docId}')">
-          <button onclick="changeStockQty('\${p._docId}','\${v.key}',1)">+</button>
+          <button onclick="changeStockQty('${p._docId}','${v.key}',-1)">−</button>
+          <input type="number" min="0" value="${qty}" id="stock-${p._docId}-${v.key.replace(/[^a-z0-9]/gi,'_')}" onchange="markStockDirty('${p._docId}')">
+          <button onclick="changeStockQty('${p._docId}','${v.key}',1)">+</button>
         </div>
-        \${stockHistory[p._docId+v.key] ? '<div class="stock-history">Última mod: '+stockHistory[p._docId+v.key]+'</div>' : ''}
-      </div>\`;
+        ${stockHistory[p._docId+v.key] ? '<div class="stock-history">Última mod: '+stockHistory[p._docId+v.key]+'</div>' : ''}
+      </div>`;
     }).join('');
 
-    return \`<div class="product-admin-card stock-product-card" data-name="\${(p.name||'').toLowerCase()}">
+    return `<div class="product-admin-card stock-product-card" data-name="${(p.name||'').toLowerCase()}">
       <div class="product-admin-header">
-        <div class="product-admin-name">\${p.name||'Sin nombre'}</div>
-        <button class="admin-btn btn-save-stock" onclick="saveStock('\${p._docId}','\${p.name}')">💾 Guardar stock</button>
+        <div class="product-admin-name">${p.name||'Sin nombre'}</div>
+        <button class="admin-btn btn-save-stock" onclick="saveStock('${p._docId}','${p.name}')">💾 Guardar stock</button>
       </div>
-      <div class="stock-grid">\${stockItems}</div>
-    </div>\`;
+      <div class="stock-grid">${stockItems}</div>
+    </div>`;
   }).join('');
 }
 
@@ -1480,7 +1480,7 @@ function changeStockQty(docId, key, delta) {
 }
 
 function markStockDirty(docId) {
-  const btn = document.querySelector(\`.stock-product-card [onclick*="saveStock('\${docId}'"]\`);
+  const btn = document.querySelector(`.stock-product-card [onclick*="saveStock('${docId}'"]`);
   if(btn) btn.style.background = '#f59e0b';
 }
 
@@ -1509,7 +1509,7 @@ async function saveStock(docId, productName) {
   try {
     await updateDoc(doc(dbTienda, 'products', docId), { stock: newStock });
     stockHistory[docId] = new Date().toLocaleString('es-AR');
-    const btn = document.querySelector(\`.stock-product-card [onclick*="saveStock('\${docId}'"]\`);
+    const btn = document.querySelector(`.stock-product-card [onclick*="saveStock('${docId}'"]`);
     if(btn) { btn.style.background = ''; btn.textContent = '✅ Guardado'; setTimeout(() => btn.textContent = '💾 Guardar stock', 1500); }
     showToastVR('✅ Stock de "' + productName + '" actualizado');
   } catch(e) { showToastVR('Error guardando stock: ' + e.message); }
@@ -1540,22 +1540,22 @@ function renderBannerAdmin() {
   const list = document.getElementById('bannerAdminList');
   if(!list) return;
   if(!bannerSlidesAdmin.length) { list.innerHTML = '<p style="color:var(--muted)">No hay slides.</p>'; return; }
-  list.innerHTML = bannerSlidesAdmin.map((s,i) => \`
+  list.innerHTML = bannerSlidesAdmin.map((s,i) => `
     <div class="banner-item-admin">
-      <img class="banner-thumb" src="\${s.url||''}" style="object-position:\${s.position||'center'}">
+      <img class="banner-thumb" src="${s.url||''}" style="object-position:${s.position||'center'}">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-top:0.5rem">
-        <div style="font-size:0.78rem;font-weight:500">\${s.label||'Slide '+(i+1)}</div>
+        <div style="font-size:0.78rem;font-weight:500">${s.label||'Slide '+(i+1)}</div>
         <div style="display:flex;gap:0.4rem">
-          <select onchange="updateBannerPos(this,'\${s._docId}')" style="font-size:0.72rem;padding:0.2rem 0.4rem;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
-            \${['center center','top center','bottom center','center left','center right'].map(pos =>
+          <select onchange="updateBannerPos(this,'${s._docId}')" style="font-size:0.72rem;padding:0.2rem 0.4rem;border:1px solid var(--border);border-radius:4px;background:var(--bg)">
+            ${['center center','top center','bottom center','center left','center right'].map(pos =>
               '<option value="'+pos+'"'+(s.position===pos?' selected':'')+'>'+pos+'</option>'
             ).join('')}
           </select>
-          <button class="admin-btn danger" style="padding:0.25rem 0.6rem;font-size:0.72rem" onclick="deleteBannerSlide('\${s._docId}')">✕</button>
+          <button class="admin-btn danger" style="padding:0.25rem 0.6rem;font-size:0.72rem" onclick="deleteBannerSlide('${s._docId}')">✕</button>
         </div>
       </div>
     </div>
-  \`).join('');
+  `).join('');
 }
 
 async function updateBannerPos(sel, docId) {
@@ -1669,13 +1669,13 @@ async function loadCoupons() {
     if(snap.empty) { container.innerHTML = '<p style="color:var(--muted);font-size:0.8rem">No hay cupones activos.</p>'; return; }
     container.innerHTML = snap.docs.map(d => {
       const c = d.data();
-      return \`<div style="display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.8rem">
-        <div><strong>\${d.id}</strong> · \${c.type==='pct'?c.value+'%':'$'+c.value} · \${c.active?'✅ Activo':'❌ Inactivo'}</div>
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.8rem">
+        <div><strong>${d.id}</strong> · ${c.type==='pct'?c.value+'%':'$'+c.value} · ${c.active?'✅ Activo':'❌ Inactivo'}</div>
         <div style="display:flex;gap:0.4rem">
-          <button class="admin-btn secondary" style="padding:0.2rem 0.5rem;font-size:0.7rem" onclick="toggleCoupon('\${d.id}',\${!c.active})">\${c.active?'Desactivar':'Activar'}</button>
-          <button class="admin-btn danger" style="padding:0.2rem 0.5rem;font-size:0.7rem" onclick="deleteCoupon('\${d.id}')">✕</button>
+          <button class="admin-btn secondary" style="padding:0.2rem 0.5rem;font-size:0.7rem" onclick="toggleCoupon('${d.id}',${!c.active})">${c.active?'Desactivar':'Activar'}</button>
+          <button class="admin-btn danger" style="padding:0.2rem 0.5rem;font-size:0.7rem" onclick="deleteCoupon('${d.id}')">✕</button>
         </div>
-      </div>\`;
+      </div>`;
     }).join('');
   } catch(e) { container.innerHTML = 'Error cargando cupones'; }
 }
