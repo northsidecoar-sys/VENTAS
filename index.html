@@ -1480,7 +1480,7 @@ async function saveProdModal() {
   var desc  = document.getElementById('pmDesc').value.trim();
 
   if(!name) { showToastVR('El nombre es obligatorio'); return; }
-  if(!cat)  { showToastVR('Seleccioná una categoría'); return; }
+  if(!cat)  { showToastVR('Ingresá una categoría'); return; }
   if(isNaN(priceVal) || priceVal <= 0) { showToastVR('Ingresá un precio válido'); return; }
 
   var saveBtn = document.getElementById('prodModalSaveBtn');
@@ -1815,14 +1815,17 @@ async function deleteCoupon(code){
       </div>
       <div class="prod-modal-field">
         <label>Categoría *</label>
-        <select id="pmCat" onchange="updateProdPreview()">
-          <option value="">— Seleccioná —</option>
-          <option value="BUZOS">Buzos</option>
-          <option value="PANTALONES">Pantalones</option>
-          <option value="CAMPERAS">Camperas</option>
-          <option value="REMERAS">Remeras</option>
-          <option value="ACCESORIOS">Accesorios</option>
-        </select>
+        <input id="pmCat" list="pmCatList" placeholder="Ej: BUZOS, PANTALONES..." onchange="updateProdPreview()" oninput="updateProdPreview()">
+        <datalist id="pmCatList">
+          <option value="BUZOS">
+          <option value="PANTALONES">
+          <option value="CAMPERAS">
+          <option value="REMERAS">
+          <option value="ACCESORIOS">
+          <option value="Buzos">
+          <option value="Pantalones">
+          <option value="Camperas">
+        </datalist>
       </div>
     </div>
 
