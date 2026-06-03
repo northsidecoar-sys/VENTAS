@@ -211,6 +211,16 @@
   .pm-img-thumb img{width:100%;height:100%;object-fit:cover;}
   .pm-img-del{position:absolute;top:2px;right:2px;background:rgba(0,0,0,.65);color:#fff;border:none;border-radius:3px;width:18px;height:18px;font-size:.65rem;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;}
   .pm-img-main-badge{position:absolute;bottom:2px;left:2px;background:var(--accent);color:#fff;font-size:.55rem;padding:1px 4px;border-radius:2px;}
+
+  /* DRAG AND DROP ORDER */
+  .prod-admin-card{transition:opacity 0.15s,box-shadow 0.15s;cursor:default;}
+  .prod-admin-card.dragging{opacity:0.4;box-shadow:none;}
+  .prod-admin-card.drag-over{box-shadow:0 -3px 0 0 var(--accent);}
+  .drag-handle{cursor:grab;color:var(--muted);font-size:1.1rem;padding:0 4px 0 0;flex-shrink:0;user-select:none;line-height:1;}
+  .drag-handle:active{cursor:grabbing;}
+  .order-save-bar{display:none;position:sticky;bottom:0;background:var(--surface);border-top:1px solid var(--border);padding:.7rem 1rem;align-items:center;justify-content:space-between;z-index:10;gap:.5rem;}
+  .order-save-bar.visible{display:flex;}
+  .order-indicator{font-size:.75rem;color:var(--muted);}
   /* ─── ADMIN TABS ─── */
   .admin-tab-section{display:none;padding:1.2rem;}
   .admin-tab-section h2{font-size:1.05rem;font-weight:700;margin-bottom:1rem;}
@@ -467,11 +477,16 @@
 <!-- ══ TAB: PRODUCTOS ══ -->
 <section id="admintab-productos" class="admin-tab-section">
   <h2>📦 Productos</h2>
-  <div style="display:flex;gap:.5rem;margin-bottom:.9rem;flex-wrap:wrap">
+  <div style="display:flex;gap:.5rem;margin-bottom:.9rem;flex-wrap:wrap;align-items:center">
     <button class="abtn" onclick="window.adminOpenAddProduct()">+ Nuevo</button>
     <button class="abtn sec" onclick="window.loadAdminProducts()">↺ Actualizar</button>
+    <span style="font-size:.72rem;color:var(--muted);margin-left:.5rem">⠿ Arrastrá las tarjetas para cambiar el orden</span>
   </div>
   <div id="adminProductsList"></div>
+  <div class="order-save-bar" id="orderSaveBar">
+    <span class="order-indicator">Orden modificado — los cambios no se guardan automáticamente</span>
+    <button class="abtn" onclick="window.saveProductOrder()">💾 Guardar orden</button>
+  </div>
 </section>
 
 <!-- ══ TAB: STOCK ══ -->
@@ -1916,6 +1931,125 @@ window.saveConfig = async function(type) {
     return;
   }
   await _baseSaveConfig(type);
+};
+
+
+// ── PRODUCT ORDER (DRAG & DROP) ──────────────────────────
+var _orderDirty = false;
+var _dragSrcIdx  = null;
+
+// Override renderAdminProducts to add drag handles + DnD events
+var _baseRenderAdminProducts = window.renderAdminProducts;
+window.renderAdminProducts = function() {
+  var el = document.getElementById('adminProductsList');
+  if(!el) return;
+  el.innerHTML = '';
+  if(!adminProducts.length) { el.innerHTML='<p style="color:var(--muted)">Sin productos.</p>'; return; }
+
+  adminProducts.forEach(function(p, idx) {
+    var card = document.createElement('div');
+    card.className = 'prod-admin-card';
+    card.draggable = true;
+    card.dataset.idx = idx;
+
+    var imgs = p.imgs || [];
+    var thumbSrc = imgs.length ? (imgs[0].url || imgs[0].data || '') : '';
+    var stockStr = p.stock
+      ? Object.entries(p.stock).slice(0,3).map(function(e){ return e[0]+':'+e[1]; }).join(' · ')
+      : 'Sin stock';
+
+    var hdr = document.createElement('div'); hdr.className = 'prod-admin-hdr';
+
+    // Drag handle
+    var handle = document.createElement('div'); handle.className = 'drag-handle'; handle.textContent = '⠿';
+    handle.title = 'Arrastrá para cambiar el orden';
+
+    // Left: thumb + info
+    var left = document.createElement('div'); left.style.cssText = 'display:flex;align-items:center;gap:.6rem;min-width:0;flex:1';
+    var thumb = document.createElement(thumbSrc?'img':'div');
+    thumb.style.cssText = 'width:44px;height:44px;border-radius:5px;border:1px solid var(--border);flex-shrink:0;object-fit:cover';
+    if(thumbSrc){ thumb.src=thumbSrc; thumb.alt=''; }
+    else { thumb.style.background='var(--border)'; thumb.style.display='flex'; thumb.style.alignItems='center'; thumb.style.justifyContent='center'; thumb.textContent='🧥'; }
+    var info = document.createElement('div'); info.style.minWidth='0';
+    var nm = document.createElement('div'); nm.className='prod-admin-name'; nm.textContent=p.name||'Sin nombre';
+    var ct = document.createElement('div'); ct.style.cssText='font-size:.7rem;color:var(--muted)';
+    ct.textContent = '#'+(idx+1)+' · '+(p.cat||'Sin cat')+' · $'+Number(p.price||0).toLocaleString('es-AR');
+    var sk = document.createElement('div'); sk.style.cssText='font-size:.65rem;color:var(--muted);margin-top:.1rem';
+    sk.textContent='📦 '+stockStr;
+    info.append(nm,ct,sk); left.append(thumb,info);
+
+    // Right: buttons
+    var btns = document.createElement('div'); btns.style.cssText='display:flex;gap:.4rem;flex-shrink:0';
+    var eb = document.createElement('button'); eb.className='abtn'; eb.style.cssText='padding:.3rem .6rem;font-size:.7rem'; eb.textContent='✏';
+    (function(docId){ eb.onclick = function(){ window.editProduct(docId); }; })(p._docId);
+    var db2 = document.createElement('button'); db2.className='abtn red'; db2.style.cssText='padding:.3rem .6rem;font-size:.7rem'; db2.textContent='✕';
+    (function(docId, name){ db2.onclick = function(){ window.deleteProduct(docId, name); }; })(p._docId, p.name);
+    btns.append(eb, db2);
+
+    hdr.append(handle, left, btns);
+    card.append(hdr);
+
+    // ── Drag events ──
+    card.addEventListener('dragstart', function(e) {
+      _dragSrcIdx = parseInt(card.dataset.idx);
+      card.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', function() {
+      card.classList.remove('dragging');
+      el.querySelectorAll('.prod-admin-card').forEach(function(c){ c.classList.remove('drag-over'); });
+    });
+    card.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      el.querySelectorAll('.prod-admin-card').forEach(function(c){ c.classList.remove('drag-over'); });
+      card.classList.add('drag-over');
+    });
+    card.addEventListener('dragleave', function() {
+      card.classList.remove('drag-over');
+    });
+    card.addEventListener('drop', function(e) {
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      var targetIdx = parseInt(card.dataset.idx);
+      if(_dragSrcIdx === null || _dragSrcIdx === targetIdx) return;
+      // Reorder adminProducts array
+      var moved = adminProducts.splice(_dragSrcIdx, 1)[0];
+      adminProducts.splice(targetIdx, 0, moved);
+      _dragSrcIdx = null;
+      _orderDirty = true;
+      window.renderAdminProducts(); // re-render with new indices
+      var bar = document.getElementById('orderSaveBar');
+      if(bar) bar.classList.add('visible');
+    });
+
+    el.append(card);
+  });
+};
+
+window.saveProductOrder = async function() {
+  if(!adminProducts.length) return;
+  var saveBtn = document.querySelector('#orderSaveBar .abtn');
+  if(saveBtn) { saveBtn.textContent = 'Guardando...'; saveBtn.disabled = true; }
+  try {
+    // Update order field on each product in Firebase
+    var updates = adminProducts.map(function(p, i) {
+      return updateDoc(doc(dbTienda, 'products', p._docId), { order: i });
+    });
+    await Promise.all(updates);
+    // Update local array
+    adminProducts.forEach(function(p, i){ p.order = i; });
+    _orderDirty = false;
+    var bar = document.getElementById('orderSaveBar');
+    if(bar) bar.classList.remove('visible');
+    window.showToastVR('✅ Orden guardado — se refleja en la tienda');
+    window.renderAdminProducts(); // refresh position numbers
+  } catch(e) {
+    window.showToastVR('❌ Error guardando orden: ' + e.message);
+    console.error('saveProductOrder:', e);
+  } finally {
+    if(saveBtn) { saveBtn.textContent = '💾 Guardar orden'; saveBtn.disabled = false; }
+  }
 };
 
 </script>
