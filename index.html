@@ -910,6 +910,16 @@ function renderOrderCard(p) {
       <div class="ocard-items">${itemsHtml}</div>
       ${chips.length ? `<div class="ocard-meta">${chips.join('')}</div>` : ''}
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+        ${p.comprobanteUrl ? `
+        <div style="margin-bottom:0.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);width:100%">
+          <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">📎 Comprobante</div>
+          ${/\.(jpg|jpeg|png|gif|webp)/i.test(p.comprobanteUrl) || p.comprobanteUrl.startsWith('data:image') ? `
+            <a href="${p.comprobanteUrl}" target="_blank">
+              <img src="${p.comprobanteUrl}" style="max-width:240px;max-height:160px;object-fit:contain;border:1px solid var(--border);border-radius:4px;display:block;cursor:pointer" title="Ver en tamaño completo">
+            </a>
+          ` : `<a href="${p.comprobanteUrl}" target="_blank" style="font-size:0.78rem;color:var(--accent);text-decoration:none;border:1px solid var(--border);padding:0.3rem 0.6rem;border-radius:4px;display:inline-flex;align-items:center;gap:0.3rem">📄 Ver PDF</a>`}
+        </div>` : (p.payment === 'transferencia' || p.payment === 'mercadopago') ? `
+        <div style="margin-bottom:0.5rem;width:100%;padding:0.35rem 0.6rem;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:0.7rem;color:#856404">⚠️ Sin comprobante adjunto</div>` : ''}
         <div class="status-control">${statusBtns}</div>
         <button class="sbtn" style="border-color:var(--accent2);color:var(--accent2);flex-shrink:0" onclick="deletePedido('${p._docId}')">🗑 Borrar</button>
       </div>
