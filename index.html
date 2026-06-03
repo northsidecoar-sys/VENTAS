@@ -233,6 +233,25 @@
   .upload-zone{border:2px dashed var(--border);border-radius:8px;padding:1.2rem;text-align:center;cursor:pointer;position:relative;}
   .upload-zone input[type="file"]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
   .coupon-row{display:flex;align-items:center;justify-content:space-between;padding:0.4rem 0;border-bottom:1px solid var(--border);font-size:0.8rem;}
+
+  /* PRODUCT MODAL */
+  .prod-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.6);z-index:1000;align-items:center;justify-content:center;padding:1rem;}
+  .prod-modal-overlay.open{display:flex;}
+  .prod-modal{background:var(--surface);border:1px solid var(--border);border-radius:12px;width:100%;max-width:560px;max-height:90vh;overflow-y:auto;padding:1.5rem;}
+  .prod-modal h3{font-size:1.1rem;font-weight:700;margin-bottom:1.2rem;border-bottom:1px solid var(--border);padding-bottom:0.8rem;}
+  .prod-modal-field{display:flex;flex-direction:column;gap:0.3rem;margin-bottom:0.9rem;}
+  .prod-modal-field label{font-size:0.78rem;color:var(--muted);font-weight:500;}
+  .prod-modal-field input,.prod-modal-field select,.prod-modal-field textarea{padding:0.55rem 0.7rem;border:1px solid var(--border);border-radius:6px;font-size:0.88rem;background:var(--bg);color:var(--text);}
+  .prod-modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:0.8rem;}
+  .prod-modal-actions{display:flex;gap:0.6rem;margin-top:1.2rem;justify-content:flex-end;}
+  .prod-preview{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:1rem;}
+  .prod-preview-title{font-size:0.72rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.6rem;}
+  .prod-preview-card{display:flex;gap:0.8rem;align-items:flex-start;}
+  .prod-preview-img{width:64px;height:64px;background:var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.5rem;flex-shrink:0;}
+  .prod-preview-info .name{font-weight:700;font-size:0.95rem;margin-bottom:0.2rem;}
+  .prod-preview-info .cat{font-size:0.72rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;}
+  .prod-preview-info .price{font-size:1.1rem;font-weight:700;color:var(--accent);margin-top:0.3rem;}
+  .prod-preview-info .sizes{font-size:0.72rem;color:var(--muted);margin-top:0.2rem;}
 </style>
 </head>
 <body>
@@ -1400,46 +1419,109 @@ function renderAdminProducts() {
 }
 
 function adminOpenAddProduct() {
-  const name = prompt('Nombre del producto:');
-  if(!name || !name.trim()) return;
-  const cat = prompt('Categoría (ej: BUZOS, PANTALONES):') || '';
-  const priceStr = prompt('Precio:');
-  const price = parseFloat(priceStr);
-  if(isNaN(price)) { alert('Precio inválido'); return; }
-  const sizes = prompt('Talles disponibles (ej: S,M,L,XL):') || '';
-  const id = Date.now();
-  addDoc(collection(dbTienda, 'products'), {
-    id: id, name: name.trim(), cat: cat.trim(), price: price,
-    sizes: sizes.trim(), imgs: [], order: id, colors: []
-  })
-  .then(function() { showToastVR('Producto "' + name + '" creado'); loadAdminProducts(); })
-  .catch(function(e) { showToastVR('Error: ' + e.message); });
+  document.getElementById('prodModalTitle').textContent = 'Nuevo producto';
+  document.getElementById('prodModalDocId').value = '';
+  document.getElementById('pmName').value = '';
+  document.getElementById('pmCat').value = '';
+  document.getElementById('pmPrice').value = '';
+  document.getElementById('pmOriginalPrice').value = '';
+  document.getElementById('pmSizes').value = '';
+  document.getElementById('pmDesc').value = '';
+  updateProdPreview();
+  document.getElementById('prodModalOverlay').classList.add('open');
 }
 
 function editProduct(docId) {
-  const p = adminProducts.find(function(x){ return x._docId === docId; });
+  var p = adminProducts.find(function(x){ return x._docId === docId; });
   if(!p) return;
-  const name = prompt('Nombre:', p.name || '');
-  if(name === null) return;
-  const priceStr = prompt('Precio:', p.price || 0);
-  if(priceStr === null) return;
-  const price = parseFloat(priceStr);
-  if(isNaN(price)) { alert('Precio inválido'); return; }
-  const sizes = prompt('Talles (ej: S,M,L,XL):', p.sizes || '');
-  if(sizes === null) return;
-  const cat = prompt('Categoría:', p.cat || '');
-  if(cat === null) return;
-  updateDoc(doc(dbTienda, 'products', docId), { name: name.trim(), price: price, sizes: sizes.trim(), cat: cat.trim() })
-    .then(function() { showToastVR('Producto actualizado'); loadAdminProducts(); })
-    .catch(function(e) { showToastVR('Error: ' + e.message); });
+  document.getElementById('prodModalTitle').textContent = 'Editar producto';
+  document.getElementById('prodModalDocId').value = docId;
+  document.getElementById('pmName').value = p.name || '';
+  document.getElementById('pmCat').value = p.cat || '';
+  document.getElementById('pmPrice').value = p.price || '';
+  document.getElementById('pmOriginalPrice').value = p.originalPrice || '';
+  document.getElementById('pmSizes').value = p.sizes || '';
+  document.getElementById('pmDesc').value = p.desc || '';
+  updateProdPreview();
+  document.getElementById('prodModalOverlay').classList.add('open');
+}
+
+function updateProdPreview() {
+  var name  = document.getElementById('pmName').value || 'Nombre del producto';
+  var cat   = document.getElementById('pmCat').value || 'Categoría';
+  var price = parseFloat(document.getElementById('pmPrice').value) || 0;
+  var origP = parseFloat(document.getElementById('pmOriginalPrice').value) || 0;
+  var sizes = document.getElementById('pmSizes').value || '—';
+  document.getElementById('ppName').textContent = name;
+  document.getElementById('ppCat').textContent  = cat;
+  document.getElementById('ppSizes').textContent = 'Talles: ' + sizes;
+  var priceEl = document.getElementById('ppPrice');
+  if(origP > price && origP > 0) {
+    var pct = Math.round((1 - price/origP)*100);
+    priceEl.innerHTML = '$' + Number(price).toLocaleString('es-AR') +
+      ' <span style="text-decoration:line-through;font-size:0.8rem;opacity:0.5">$' + Number(origP).toLocaleString('es-AR') + '</span>' +
+      ' <span style="font-size:0.72rem;background:#ef4444;color:#fff;padding:0.1rem 0.4rem;border-radius:3px">-' + pct + '%</span>';
+  } else {
+    priceEl.textContent = '$' + Number(price).toLocaleString('es-AR');
+  }
+}
+
+function closeProdModal() {
+  document.getElementById('prodModalOverlay').classList.remove('open');
+}
+
+async function saveProdModal() {
+  var docId = document.getElementById('prodModalDocId').value;
+  var name  = document.getElementById('pmName').value.trim();
+  var cat   = document.getElementById('pmCat').value.trim();
+  var priceVal = parseFloat(document.getElementById('pmPrice').value);
+  var origPrice = parseFloat(document.getElementById('pmOriginalPrice').value) || null;
+  var sizes = document.getElementById('pmSizes').value.trim();
+  var desc  = document.getElementById('pmDesc').value.trim();
+
+  if(!name) { showToastVR('El nombre es obligatorio'); return; }
+  if(!cat)  { showToastVR('Seleccioná una categoría'); return; }
+  if(isNaN(priceVal) || priceVal <= 0) { showToastVR('Ingresá un precio válido'); return; }
+
+  var saveBtn = document.getElementById('prodModalSaveBtn');
+  saveBtn.textContent = 'Guardando...';
+  saveBtn.disabled = true;
+
+  var data = {
+    name: name, cat: cat, price: priceVal,
+    sizes: sizes, desc: desc,
+    originalPrice: origPrice && origPrice > priceVal ? origPrice : null
+  };
+
+  try {
+    if(docId) {
+      // Edit existing
+      await updateDoc(doc(dbTienda, 'products', docId), data);
+      showToastVR('✅ Producto actualizado');
+    } else {
+      // New product
+      var id = Date.now();
+      data.id = id; data.order = id; data.imgs = []; data.colors = [];
+      await addDoc(collection(dbTienda, 'products'), data);
+      showToastVR('✅ Producto "' + name + '" creado');
+    }
+    closeProdModal();
+    loadAdminProducts();
+  } catch(e) {
+    showToastVR('Error: ' + e.message);
+  } finally {
+    saveBtn.textContent = 'Guardar producto';
+    saveBtn.disabled = false;
+  }
 }
 
 function deleteProduct(docId, name) {
   if(!confirm('¿Eliminar "' + name + '"? Esta acción no se puede deshacer.')) return;
   deleteDoc(doc(dbTienda, 'products', docId))
-    .then(function() { showToastVR('Producto eliminado'); loadAdminProducts(); })
+    .then(function() { showToastVR('✅ Producto eliminado'); loadAdminProducts(); })
     .catch(function(e) { showToastVR('Error: ' + e.message); });
 }
+
 
 // ── STOCK ─────────────────────────────────────────────────
 async function loadStockPanel() {
@@ -1719,5 +1801,72 @@ async function deleteCoupon(code){
 
 
 </script>
+
+<!-- PRODUCT ADD/EDIT MODAL -->
+<div class="prod-modal-overlay" id="prodModalOverlay">
+  <div class="prod-modal">
+    <h3 id="prodModalTitle">Nuevo producto</h3>
+    <input type="hidden" id="prodModalDocId" value="">
+
+    <div class="prod-modal-grid">
+      <div class="prod-modal-field">
+        <label>Nombre *</label>
+        <input id="pmName" placeholder="Ej: Buzo Oversize" oninput="updateProdPreview()">
+      </div>
+      <div class="prod-modal-field">
+        <label>Categoría *</label>
+        <select id="pmCat" onchange="updateProdPreview()">
+          <option value="">— Seleccioná —</option>
+          <option value="BUZOS">Buzos</option>
+          <option value="PANTALONES">Pantalones</option>
+          <option value="CAMPERAS">Camperas</option>
+          <option value="REMERAS">Remeras</option>
+          <option value="ACCESORIOS">Accesorios</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="prod-modal-grid">
+      <div class="prod-modal-field">
+        <label>Precio *</label>
+        <input id="pmPrice" type="number" placeholder="Ej: 55000" oninput="updateProdPreview()">
+      </div>
+      <div class="prod-modal-field">
+        <label>Precio original (si hay descuento)</label>
+        <input id="pmOriginalPrice" type="number" placeholder="Ej: 69000" oninput="updateProdPreview()">
+      </div>
+    </div>
+
+    <div class="prod-modal-field">
+      <label>Talles disponibles (separados por coma)</label>
+      <input id="pmSizes" placeholder="Ej: S, M, L, XL, XXL" oninput="updateProdPreview()">
+    </div>
+
+    <div class="prod-modal-field">
+      <label>Descripción (opcional)</label>
+      <textarea id="pmDesc" rows="3" placeholder="Descripción del producto..." oninput="updateProdPreview()" style="resize:vertical"></textarea>
+    </div>
+
+    <!-- LIVE PREVIEW -->
+    <div class="prod-preview">
+      <div class="prod-preview-title">Vista previa en la tienda</div>
+      <div class="prod-preview-card">
+        <div class="prod-preview-img">🧥</div>
+        <div class="prod-preview-info">
+          <div class="name" id="ppName">Nombre del producto</div>
+          <div class="cat" id="ppCat">Categoría</div>
+          <div class="price" id="ppPrice">$0</div>
+          <div class="sizes" id="ppSizes">Talles: —</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prod-modal-actions">
+      <button class="admin-btn secondary" onclick="closeProdModal()">Cancelar</button>
+      <button class="admin-btn" id="prodModalSaveBtn" onclick="saveProdModal()">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
