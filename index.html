@@ -245,6 +245,28 @@
   .acfgbox h3{font-size:.87rem;font-weight:600;margin-bottom:.65rem;}
   .banner-thumb{width:100%;height:100px;object-fit:cover;border-radius:6px;border:1px solid var(--border);}
   .banner-item{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:.7rem;margin-bottom:.6rem;}
+  /* ── BANNER PREVIEW (réplica de northside_3) ── */
+  .bnr-preview-wrap{margin-bottom:1.2rem;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#1a1612;}
+  .bnr-preview-header{display:flex;align-items:center;justify-content:space-between;padding:.5rem .8rem;border-bottom:1px solid var(--border);background:var(--surface);}
+  .bnr-preview-header span{font-size:.62rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted);}
+  .bnr-preview-header em{font-size:.62rem;color:var(--accent3);font-style:normal;letter-spacing:.05em;}
+  .bnr-stage{position:relative;width:100%;height:260px;overflow:hidden;background:#1a1612;}
+  .bnr-track{display:flex;transition:transform 0.5s cubic-bezier(.77,0,.18,1);height:100%;}
+  .bnr-slide{position:relative;min-width:100%;overflow:hidden;height:100%;}
+  .bnr-slide img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .6s ease;}
+  .bnr-slide:hover img{transform:scale(1.03);}
+  .bnr-overlay{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 40%,rgba(26,22,18,.55) 100%);}
+  .bnr-label{position:absolute;bottom:1.2rem;left:1.5rem;color:#fff;}
+  .bnr-label p{font-size:.62rem;letter-spacing:.2em;text-transform:uppercase;opacity:.8;margin-bottom:.2rem;}
+  .bnr-label h3{font-family:'Syne',sans-serif;font-size:1.4rem;font-weight:800;letter-spacing:.04em;line-height:1;}
+  .bnr-label small{font-size:.65rem;letter-spacing:.12em;text-transform:uppercase;opacity:.7;margin-top:.3rem;display:block;}
+  .bnr-arrow{position:absolute;top:50%;transform:translateY(-50%);background:rgba(247,243,238,.18);backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.25);color:#fff;width:36px;height:36px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem;transition:all .2s;z-index:10;border-radius:4px;}
+  .bnr-arrow:hover{background:rgba(247,243,238,.35);}
+  .bnr-arrow.left{left:.8rem;} .bnr-arrow.right{right:.8rem;}
+  .bnr-dots{position:absolute;bottom:.7rem;right:1rem;display:flex;gap:5px;z-index:10;}
+  .bnr-dot{width:5px;height:5px;border-radius:50%;background:rgba(255,255,255,.4);border:none;cursor:pointer;padding:0;transition:all .2s;}
+  .bnr-dot.active{background:#fff;transform:scale(1.35);}
+  .bnr-empty{width:100%;height:260px;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.6rem;color:var(--muted);font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;}
   .upload-zone{border:2px dashed var(--border);border-radius:8px;padding:1rem;text-align:center;cursor:pointer;position:relative;}
   .upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
   .cprow{display:flex;align-items:center;justify-content:space-between;padding:.35rem 0;border-bottom:1px solid var(--border);font-size:.78rem;}
@@ -262,6 +284,25 @@
   .pm-preview-card{display:flex;gap:.7rem;align-items:center;}
   .pm-preview-img{width:52px;height:52px;background:var(--border);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.4rem;flex-shrink:0;}
   .pm-actions{display:flex;gap:.5rem;margin-top:1rem;justify-content:flex-end;}
+  /* ── SIZE GUIDE & STOCK ── */
+  .size-guide-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+  .size-guide-row input{flex:1;padding:.4rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--text);}
+  .size-guide-row .btn-rm-row{background:none;border:1px solid var(--border);color:var(--muted);width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;border-radius:4px;transition:all .2s;}
+  .size-guide-row .btn-rm-row:hover{border-color:#c0392b;color:#c0392b;}
+  .btn-add-row{background:none;border:1px dashed var(--border);color:var(--muted);padding:.35rem .7rem;font-size:.68rem;letter-spacing:.08em;text-transform:uppercase;cursor:pointer;font-family:'DM Mono',monospace;margin-top:4px;transition:all .2s;width:100%;border-radius:6px;}
+  .btn-add-row:hover{border-color:var(--accent);color:var(--accent);}
+  .stock-row{display:flex;gap:6px;align-items:center;margin-bottom:6px;}
+  .stock-row .stock-size-label{flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:.4rem .6rem;font-size:.8rem;color:var(--muted);}
+  .stock-row input[type="number"]{width:80px;flex-shrink:0;padding:.4rem .5rem;border:1px solid var(--border);border-radius:6px;font-size:.8rem;background:var(--bg);color:var(--text);}
+  .sg-section-lbl{font-size:.65rem;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);margin-bottom:.35rem;margin-top:.9rem;display:block;}
+  .sg-col-headers{display:grid;grid-template-columns:1fr 70px 70px 28px;gap:6px;margin-bottom:3px;}
+  .sg-col-headers span{font-size:.6rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);}
+  .sg-upload-zone{border:1px dashed var(--border);border-radius:7px;padding:.6rem;text-align:center;font-size:.73rem;color:var(--muted);cursor:pointer;position:relative;transition:border-color .2s;margin-top:.5rem;}
+  .sg-upload-zone:hover{border-color:var(--accent3);}
+  .sg-upload-zone input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+  .sg-img-wrap{margin-top:.5rem;position:relative;display:none;}
+  .sg-img-wrap img{width:100%;max-height:150px;object-fit:contain;border:1px solid var(--border);border-radius:6px;display:block;}
+  .sg-img-remove{position:absolute;top:5px;right:5px;background:rgba(13,13,15,.8);color:#fff;border:none;padding:.25rem .5rem;font-size:.65rem;cursor:pointer;border-radius:4px;letter-spacing:.05em;text-transform:uppercase;}
 </style>
 </head>
 <body>
@@ -502,6 +543,24 @@
 <!-- ══ TAB: BANNER ══ -->
 <section id="admintab-banner" class="admin-tab-section">
   <h2>🖼 Banner</h2>
+
+  <!-- Preview en tiempo real del banner (igual que ve el cliente) -->
+  <div class="bnr-preview-wrap">
+    <div class="bnr-preview-header">
+      <span>Vista del cliente — northside</span>
+      <em id="bnrPreviewCount">0 slides</em>
+    </div>
+    <div class="bnr-stage" id="bnrStage">
+      <div class="bnr-empty" id="bnrEmpty">
+        📷 Sin slides — agregá imágenes abajo
+      </div>
+      <div class="bnr-track" id="bnrTrack" style="display:none"></div>
+      <button class="bnr-arrow left" id="bnrPrev" onclick="window.bnrPrev()" style="display:none">&#8592;</button>
+      <button class="bnr-arrow right" id="bnrNext" onclick="window.bnrNext()" style="display:none">&#8594;</button>
+      <div class="bnr-dots" id="bnrDots" style="display:none"></div>
+    </div>
+  </div>
+
   <div id="bannerAdminList" style="margin-bottom:1rem"></div>
   <div class="acfgbox">
     <h3>Agregar slide</h3>
@@ -599,6 +658,26 @@
     <div class="pm-field" style="margin-bottom:.7rem">
       <label>Descripción</label>
       <textarea id="pmDesc" rows="3" style="resize:vertical"></textarea>
+    </div>
+    <!-- ── GUÍA DE TALLES ── -->
+    <div class="pm-field" style="margin-bottom:.7rem">
+      <label>Guía de talles (opcional)</label>
+      <p style="font-size:.68rem;color:var(--muted);margin-bottom:.4rem">Agregá cada talle con sus medidas. Podés usar números (28, 30…) o letras (S, M, L…)</p>
+      <div class="sg-col-headers">
+        <span>Talle</span><span>Ancho cm</span><span>Largo cm</span><span></span>
+      </div>
+      <div id="pmSizeGuideRows"></div>
+      <button type="button" class="btn-add-row" onclick="window.pmAddSizeGuideRow()">+ Agregar talle a la guía</button>
+      <span class="sg-section-lbl">Imagen de la guía de talles (opcional)</span>
+      <div class="sg-upload-zone" id="pmSGUploadZone">
+        <input type="file" accept="image/*" id="pmSGImgInput" onchange="window.pmUploadSizeGuideImg(event)">
+        🖼 Subir foto de la guía — Cloudinary
+      </div>
+      <div id="pmSGImgWrap" class="sg-img-wrap">
+        <img id="pmSGImgPreview" src="" alt="Guía de talles">
+        <button class="sg-img-remove" onclick="window.pmRemoveSizeGuideImg()">✕ Sacar foto</button>
+      </div>
+      <input type="hidden" id="pmSGImgUrl" value="">
     </div>
     <div class="pm-field" style="margin-bottom:.7rem">
       <label>Imágenes del producto</label>
@@ -1481,6 +1560,13 @@ window.adminOpenAddProduct = function() {
   ['pmName','pmCat','pmPrice','pmOriginalPrice','pmSizes','pmDesc'].forEach(function(id){
     document.getElementById(id).value = '';
   });
+  // limpiar guía de talles
+  document.getElementById('pmSizeGuideRows').innerHTML = '';
+  document.getElementById('pmSGImgUrl').value = '';
+  document.getElementById('pmSGImgPreview').src = '';
+  document.getElementById('pmSGImgWrap').style.display = 'none';
+  var sgZone = document.getElementById('pmSGUploadZone');
+  if(sgZone) sgZone.innerHTML = '<input type="file" accept="image/*" id="pmSGImgInput" onchange="window.pmUploadSizeGuideImg(event)">🖼 Subir foto de la guía — Cloudinary';
   window.updateProdPreview();
   document.getElementById('pmOverlay').classList.add('open');
 };
@@ -1496,6 +1582,18 @@ window.editProduct = function(docId) {
   document.getElementById('pmOriginalPrice').value = p.originalPrice||'';
   document.getElementById('pmSizes').value = p.sizes||'';
   document.getElementById('pmDesc').value = p.desc||'';
+  // cargar guía de talles
+  var sgRows = document.getElementById('pmSizeGuideRows');
+  sgRows.innerHTML = '';
+  if(p.sizeGuide && p.sizeGuide.length) {
+    p.sizeGuide.forEach(function(row) {
+      window.pmAddSizeGuideRow(row.talle, row.ancho, row.largo);
+    });
+  }
+  var sgUrl = p.sizeGuideImg || '';
+  document.getElementById('pmSGImgUrl').value = sgUrl;
+  document.getElementById('pmSGImgPreview').src = sgUrl;
+  document.getElementById('pmSGImgWrap').style.display = sgUrl ? 'block' : 'none';
   window.updateProdPreview();
   document.getElementById('pmOverlay').classList.add('open');
 };
@@ -1692,6 +1790,96 @@ window.renderBannerAdmin = function() {
     del.onclick=function(){ window.deleteBannerSlide(cDocId); };
     btns2.append(sel,del); row.append(lbl,btns2); item.append(img,row); el.append(item);
   });
+  // actualizar preview
+  window.bnrRenderPreview();
+};
+
+// ── BANNER PREVIEW (réplica fiel de northside_3) ──────────
+var bnrIdx = 0;
+var bnrTimer = null;
+
+window.bnrRenderPreview = function() {
+  var track    = document.getElementById('bnrTrack');
+  var empty    = document.getElementById('bnrEmpty');
+  var prev     = document.getElementById('bnrPrev');
+  var next     = document.getElementById('bnrNext');
+  var dotsEl   = document.getElementById('bnrDots');
+  var countEl  = document.getElementById('bnrPreviewCount');
+  if(!track) return;
+
+  if(bnrTimer) { clearInterval(bnrTimer); bnrTimer = null; }
+  bnrIdx = 0;
+
+  var n = bannerSlides.length;
+  if(countEl) countEl.textContent = n + (n === 1 ? ' slide' : ' slides');
+
+  if(!n) {
+    empty.style.display  = 'flex';
+    track.style.display  = 'none';
+    if(prev) prev.style.display = 'none';
+    if(next) next.style.display = 'none';
+    if(dotsEl) dotsEl.style.display = 'none';
+    return;
+  }
+
+  empty.style.display  = 'none';
+  track.style.display  = 'flex';
+  if(prev) prev.style.display  = n > 1 ? 'flex' : 'none';
+  if(next) next.style.display  = n > 1 ? 'flex' : 'none';
+  if(dotsEl) dotsEl.style.display = n > 1 ? 'flex' : 'none';
+
+  // build slides
+  track.innerHTML = bannerSlides.map(function(s) {
+    var p = adminProducts.find(function(x){ return x.id == s.productId; });
+    return '<div class="bnr-slide">' +
+      '<img src="' + (s.url||'') + '" alt="' + (s.label||'') + '" style="object-position:' + (s.position||'center center') + '">' +
+      '<div class="bnr-overlay"></div>' +
+      (p ? '<div class="bnr-label"><p>' + (p.cat||'') + '</p><h3>' + p.name + '</h3><small>Ver producto →</small></div>' : '') +
+    '</div>';
+  }).join('');
+
+  // build dots
+  if(dotsEl) {
+    dotsEl.innerHTML = bannerSlides.map(function(_, i){
+      return '<button class="bnr-dot' + (i===0?' active':'') + '" onclick="window.bnrGo(' + i + ')"></button>';
+    }).join('');
+  }
+
+  track.style.transform = 'translateX(0)';
+
+  // auto-advance
+  if(n > 1) {
+    bnrTimer = setInterval(function(){
+      bnrIdx = (bnrIdx + 1) % bannerSlides.length;
+      window.bnrUpdatePos();
+    }, 4000);
+  }
+};
+
+window.bnrUpdatePos = function() {
+  var track = document.getElementById('bnrTrack');
+  if(track) track.style.transform = 'translateX(-' + (bnrIdx * 100) + '%)';
+  document.querySelectorAll('.bnr-dot').forEach(function(d, i){
+    d.classList.toggle('active', i === bnrIdx);
+  });
+};
+
+window.bnrPrev = function() {
+  bnrIdx = (bnrIdx - 1 + bannerSlides.length) % bannerSlides.length;
+  window.bnrUpdatePos();
+  if(bnrTimer) clearInterval(bnrTimer);
+  bnrTimer = setInterval(function(){ bnrIdx=(bnrIdx+1)%bannerSlides.length; window.bnrUpdatePos(); }, 4000);
+};
+window.bnrNext = function() {
+  bnrIdx = (bnrIdx + 1) % bannerSlides.length;
+  window.bnrUpdatePos();
+  if(bnrTimer) clearInterval(bnrTimer);
+  bnrTimer = setInterval(function(){ bnrIdx=(bnrIdx+1)%bannerSlides.length; window.bnrUpdatePos(); }, 4000);
+};
+window.bnrGo = function(i) {
+  bnrIdx = i; window.bnrUpdatePos();
+  if(bnrTimer) clearInterval(bnrTimer);
+  bnrTimer = setInterval(function(){ bnrIdx=(bnrIdx+1)%bannerSlides.length; window.bnrUpdatePos(); }, 4000);
 };
 
 window.updateBannerPos = async function(sel,docId){
@@ -1879,6 +2067,10 @@ window.saveProdModal = async function() {
   if(!name) { window.showToastVR('⚠️ El nombre es obligatorio'); return; }
   if(isNaN(priceVal)||priceVal<=0) { window.showToastVR('⚠️ Precio inválido'); return; }
 
+  // recolectar guía de talles
+  var sizeGuide = window.pmGetSizeGuideData();
+  var sizeGuideImg = document.getElementById('pmSGImgUrl').value || null;
+
   var saveBtn = document.getElementById('pmSaveBtn');
   var origText = saveBtn.textContent;
   saveBtn.textContent = 'Guardando...';
@@ -1887,7 +2079,9 @@ window.saveProdModal = async function() {
   var data = {
     name:name, cat:cat, price:priceVal, sizes:sizes, desc:desc,
     originalPrice:(origPrice&&origPrice>priceVal?origPrice:null),
-    imgs: pmCurrentImgs
+    imgs: pmCurrentImgs,
+    sizeGuide: sizeGuide.length ? sizeGuide : null,
+    sizeGuideImg: sizeGuideImg
   };
 
   try {
@@ -1910,6 +2104,68 @@ window.saveProdModal = async function() {
     saveBtn.textContent = origText;
     saveBtn.disabled = false;
   }
+};
+
+// ── GUÍA DE TALLES — PANEL ADMIN ─────────────────────────
+window.pmAddSizeGuideRow = function(talle, ancho, largo) {
+  var container = document.getElementById('pmSizeGuideRows');
+  if(!container) return;
+  var row = document.createElement('div');
+  row.className = 'size-guide-row';
+  row.innerHTML =
+    '<input type="text" placeholder="Ej: S o 28" value="' + (talle||'') + '" style="flex:1">' +
+    '<input type="number" placeholder="cm" value="' + (ancho||'') + '" style="width:70px;flex-shrink:0">' +
+    '<input type="number" placeholder="cm" value="' + (largo||'') + '" style="width:70px;flex-shrink:0">' +
+    '<button class="btn-rm-row" onclick="this.parentNode.remove()" title="Eliminar">✕</button>';
+  container.appendChild(row);
+};
+
+window.pmGetSizeGuideData = function() {
+  var rows = [];
+  var container = document.getElementById('pmSizeGuideRows');
+  if(!container) return rows;
+  container.querySelectorAll('.size-guide-row').forEach(function(row) {
+    var inputs = row.querySelectorAll('input');
+    var talle = inputs[0] ? inputs[0].value.trim() : '';
+    var ancho = inputs[1] ? parseFloat(inputs[1].value) : 0;
+    var largo = inputs[2] ? parseFloat(inputs[2].value) : 0;
+    if(talle) rows.push({ talle: talle, ancho: ancho||0, largo: largo||0 });
+  });
+  return rows;
+};
+
+window.pmUploadSizeGuideImg = async function(e) {
+  var file = e.target.files[0]; if(!file) return;
+  e.target.value = '';
+  var zone = document.getElementById('pmSGUploadZone');
+  if(zone) zone.textContent = 'Subiendo...';
+  try {
+    var fd = new FormData();
+    fd.append('file', file);
+    fd.append('upload_preset', UPLOAD_PRESET);
+    fd.append('folder', 'northside/size-guides');
+    var res = await fetch('https://api.cloudinary.com/v1_1/' + CLOUDINARY_CLOUD + '/image/upload', {method:'POST', body:fd});
+    var data = await res.json();
+    if(data.secure_url) {
+      document.getElementById('pmSGImgUrl').value = data.secure_url;
+      document.getElementById('pmSGImgPreview').src = data.secure_url;
+      document.getElementById('pmSGImgWrap').style.display = 'block';
+      if(zone) zone.innerHTML = '<input type="file" accept="image/*" id="pmSGImgInput" onchange="window.pmUploadSizeGuideImg(event)">🖼 Foto cargada ✓ — clic para cambiar';
+      window.showToastVR('✅ Imagen de guía subida');
+    } else { window.showToastVR('❌ Error subiendo imagen'); }
+  } catch(err) {
+    window.showToastVR('❌ Error subiendo imagen');
+    if(zone) zone.innerHTML = '<input type="file" accept="image/*" id="pmSGImgInput" onchange="window.pmUploadSizeGuideImg(event)">🖼 Subir foto de la guía — Cloudinary';
+  }
+};
+
+window.pmRemoveSizeGuideImg = function() {
+  document.getElementById('pmSGImgUrl').value = '';
+  document.getElementById('pmSGImgPreview').src = '';
+  document.getElementById('pmSGImgWrap').style.display = 'none';
+  var zone = document.getElementById('pmSGUploadZone');
+  if(zone) zone.innerHTML = '<input type="file" accept="image/*" id="pmSGImgInput" onchange="window.pmUploadSizeGuideImg(event)">🖼 Subir foto de la guía — Cloudinary';
+  window.showToastVR('Foto de guía eliminada');
 };
 
 // ── WA CONSULTA CONFIG ────────────────────────────────────
