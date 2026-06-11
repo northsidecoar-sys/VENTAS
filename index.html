@@ -365,7 +365,7 @@
         <div class="stat-value sv-warn" id="stat-pendientes">0</div>
       </div>
       <div class="stat-box">
-        <div class="stat-label">Enviados</div>
+        <div class="stat-label">En camino</div>
         <div class="stat-value sv-info" id="stat-enviados">0</div>
       </div>
     </div>
@@ -377,7 +377,7 @@
       <button class="filt-btn active" data-filt="todos" onclick="setFilt('todos',this)">Todos</button>
       <button class="filt-btn" data-filt="pendiente" onclick="setFilt('pendiente',this)">⏳ Pendiente</button>
       <button class="filt-btn" data-filt="pagado" onclick="setFilt('pagado',this)">✓ Pagado</button>
-      <button class="filt-btn" data-filt="enviado" onclick="setFilt('enviado',this)">📦 Enviado</button>
+      <button class="filt-btn" data-filt="enviado" onclick="setFilt('enviado',this)">🚚 En camino</button>
       <button class="filt-btn" data-filt="entregado" onclick="setFilt('entregado',this)">✅ Entregado</button>
       <button class="filt-btn" data-filt="cancelado" onclick="setFilt('cancelado',this)">✕ Cancelado</button>
     </div>
@@ -711,6 +711,70 @@
 
 <div class="notif" id="notif"></div>
 
+<!-- EmailJS SDK -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script>
+  // ── EMAILJS CONFIG ────────────────────────────────────────
+  // INSTRUCCIONES:
+  // 1. Crear cuenta gratis en https://emailjs.com
+  // 2. Crear un Service (Gmail recomendado) y copiar el Service ID
+  // 3. Crear 3 templates (una por estado) y copiar sus Template IDs
+  // 4. Copiar tu Public Key desde Account → API Keys
+  // Reemplazá los valores de abajo con los tuyos:
+  const EMAILJS_PUBLIC_KEY  = 'TU_PUBLIC_KEY';       // ← reemplazar
+  const EMAILJS_SERVICE_ID  = 'TU_SERVICE_ID';       // ← reemplazar
+  const EMAILJS_TEMPLATE_PAGADO    = 'template_pagado';     // ← reemplazar
+  const EMAILJS_TEMPLATE_EN_CAMINO = 'template_en_camino';  // ← reemplazar
+  const EMAILJS_TEMPLATE_ENTREGADO = 'template_entregado';  // ← reemplazar
+
+  emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
+
+  window.enviarEmailEstado = async function(pedido, nuevoEstado) {
+    const email = pedido.userEmail || pedido.clienteEmail || '';
+    if(!email || !email.includes('@')) return; // sin email, skip silencioso
+
+    const nombreCliente = pedido.userName || pedido.clienteNombre || 'cliente';
+    const orderId = pedido.orderId || pedido._docId || '—';
+    const total = pedido.total ? '$' + Number(pedido.total).toLocaleString('es-AR') : '—';
+
+    let templateId = null;
+    let params = {
+      to_email: email,
+      to_name: nombreCliente,
+      order_id: orderId,
+    };
+
+    if(nuevoEstado === 'pagado') {
+      templateId = EMAILJS_TEMPLATE_PAGADO;
+      params.mensaje = 'Recibimos tu pago correctamente. Estamos preparando tu pedido.';
+
+    } else if(nuevoEstado === 'enviado') {
+      templateId = EMAILJS_TEMPLATE_EN_CAMINO;
+      // Tabla de productos
+      const items = (pedido.items || []);
+      const tablaHtml = items.map(function(it) {
+        return it.name + ' | ' + (it.color||'—') + ' | ' + (it.size||'—') + ' | $' + Number(it.price * (it.qty||1)).toLocaleString('es-AR');
+      }).join('\n');
+      params.productos_tabla = tablaHtml || '—';
+      params.total_pedido = total;
+      params.mensaje = 'Tu pedido está en camino.';
+
+    } else if(nuevoEstado === 'entregado') {
+      templateId = EMAILJS_TEMPLATE_ENTREGADO;
+      params.mensaje = '¡Tu pedido fue entregado! Gracias por comprar en Northside.';
+    }
+
+    if(!templateId) return;
+
+    try {
+      await emailjs.send(EMAILJS_SERVICE_ID, templateId, params);
+      console.log('Email enviado →', nuevoEstado, email);
+    } catch(err) {
+      console.warn('Error enviando email:', err);
+    }
+  };
+</script>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import {
@@ -965,7 +1029,7 @@ function renderOrderCard(p) {
 
   const ESTADOS = ['pendiente','pagado','enviado','entregado','cancelado'];
   const statusBtns = ESTADOS.map(s => {
-    const labels = {pendiente:'⏳ Pendiente',pagado:'✓ Pagado',enviado:'📦 Enviado',entregado:'✅ Entregado',cancelado:'✕ Cancelar'};
+    const labels = {pendiente:'⏳ Pendiente',pagado:'✓ Pagado',enviado:'🚚 En camino',entregado:'✅ Entregado',cancelado:'✕ Cancelar'};
     return `<button class="sbtn s-${s}${status===s?' active':''}" onclick="updateEstado('${p._docId}','${s}')">${labels[s]}</button>`;
   }).join('');
 
@@ -1007,7 +1071,7 @@ function renderOrderCard(p) {
 }
 
 function statusLabel(s) {
-  return {pendiente:'⏳ Pendiente',pagado:'✓ Pagado',enviado:'📦 Enviado',entregado:'✅ Entregado',cancelado:'✕ Cancelado'}[s] || s;
+  return {pendiente:'⏳ Pendiente',pagado:'✓ Pagado',enviado:'🚚 En camino',entregado:'✅ Entregado',cancelado:'✕ Cancelado'}[s] || s;
 }
 
 // ─────────────────────────────────────────────────────────
@@ -1018,6 +1082,11 @@ window.updateEstado = async function(docId, nuevoEstado) {
   try {
     await updateDoc(doc(dbTienda, 'orders', docId), { status: nuevoEstado });
     toast(`✓ Estado → ${statusLabel(nuevoEstado)}`);
+    // Enviar email automático al cliente
+    const pedido = pedidos.find(p => p._docId === docId);
+    if(pedido && window.enviarEmailEstado) {
+      window.enviarEmailEstado(pedido, nuevoEstado);
+    }
   } catch(e) {
     console.error(e);
     toast('Error actualizando estado', 'err');
