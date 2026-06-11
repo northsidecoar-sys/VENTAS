@@ -342,6 +342,9 @@
   <div class="tab" onclick="showTab('config')">⚙ Config</div>
   <div class="tab" onclick="showTab('nueva')">+ Venta</div>
   <div class="tab" onclick="showTab('historial')">Historial</div>
+  <div class="tab" onclick="showTab('earlyaccess')">Early Access</div>
+  <div class="tab" onclick="showTab('social')">Redes</div>
+  <div class="tab" onclick="showTab('contacto')">Contacto</div>
 </div>
 
 <main>
@@ -512,6 +515,49 @@
       </div>
     </div>
     <div id="hcards"><div class="empty-msg">Cargando ventas...</div></div>
+  </div>
+
+  <!-- EARLY ACCESS -->
+  <div class="pane" id="pane-earlyaccess">
+    <div style="margin:16px 0 14px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;">Early Access List</div>
+    <div style="font-size:0.75rem;color:var(--muted);margin-bottom:16px;">Emails registrados desde el footer de la tienda.</div>
+    <div style="display:flex;gap:8px;margin-bottom:16px;">
+      <button class="abtn sec" onclick="window.loadEarlyAccessAdmin()">↺ Actualizar</button>
+      <button class="abtn" onclick="window.copyEarlyAccessAdmin()">Copiar todos</button>
+    </div>
+    <div id="earlyAccessAdminList" style="font-size:0.82rem;color:var(--muted);">Cargando...</div>
+  </div>
+
+  <!-- REDES SOCIALES -->
+  <div class="pane" id="pane-social">
+    <div style="margin:16px 0 20px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;">Redes Sociales</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Instagram</div>
+        <input class="ainp" id="adminInstagram" placeholder="https://instagram.com/northside" style="width:100%">
+      </div>
+      <div>
+        <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">TikTok</div>
+        <input class="ainp" id="adminTiktok" placeholder="https://tiktok.com/@northside" style="width:100%">
+      </div>
+      <button class="abtn" onclick="window.saveSocialAdmin()" style="align-self:flex-start">Guardar redes</button>
+    </div>
+  </div>
+
+  <!-- CONTACTO -->
+  <div class="pane" id="pane-contacto">
+    <div style="margin:16px 0 20px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;">Contacto (footer)</div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;">
+      <div>
+        <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Teléfono / WhatsApp</div>
+        <input class="ainp" id="adminPhone" placeholder="+54 9 11 1234-5678" style="width:100%">
+      </div>
+      <div>
+        <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Email de contacto</div>
+        <input class="ainp" id="adminEmail" placeholder="hola@thenorthside.com.ar" style="width:100%">
+      </div>
+      <button class="abtn" onclick="window.saveContactAdmin()" style="align-self:flex-start">Guardar contacto</button>
+    </div>
   </div>
 
 
@@ -1263,7 +1309,7 @@ window.setFilt = function(filt, btn) {
 // ─────────────────────────────────────────────────────────
 window.showTab = function(t) {
   document.querySelectorAll('.tab').forEach((el,i) => {
-    const names = ['pedidos','resumen','productos','stock','banner','config','nueva','historial'];
+    const names = ['pedidos','resumen','productos','stock','banner','config','nueva','historial','earlyaccess','social','contacto'];
     el.classList.toggle('active', names[i]===t);
   });
   document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('active'); });
@@ -1278,6 +1324,94 @@ window.showTab = function(t) {
   if(t==='stock') window.loadStockPanel();
   if(t==='banner') window.loadBannerAdmin();
   if(t==='config') window.loadConfig();
+  if(t==='earlyaccess') window.loadEarlyAccessAdmin();
+  if(t==='social') window.loadSocialAdmin();
+  if(t==='contacto') window.loadContactAdmin();
+};
+
+// ─────────────────────────────────────────────────────────
+// EARLY ACCESS ADMIN
+// ─────────────────────────────────────────────────────────
+let _earlyAccessEmails = [];
+
+window.loadEarlyAccessAdmin = async function() {
+  const listEl = document.getElementById('earlyAccessAdminList');
+  if(!listEl) return;
+  listEl.innerHTML = '<span style="color:var(--muted)">Cargando...</span>';
+  try {
+    const snap = await getDocs(collection(dbTienda, 'early_access'));
+    _earlyAccessEmails = [];
+    snap.forEach(d => _earlyAccessEmails.push(d.data().email));
+    if(_earlyAccessEmails.length === 0) {
+      listEl.innerHTML = '<span style="color:var(--muted)">Todavía no hay emails registrados.</span>';
+      return;
+    }
+    listEl.innerHTML = _earlyAccessEmails.map(function(em, i) {
+      return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;">' +
+        '<span style="color:var(--muted);margin-right:10px;">' + (i+1) + '.</span>' + em + '</div>';
+    }).join('') +
+    '<div style="margin-top:6px;font-size:0.72rem;color:var(--muted);">' + _earlyAccessEmails.length + ' registrados</div>';
+  } catch(e) { listEl.innerHTML = '<span style="color:var(--accent2)">Error cargando lista.</span>'; }
+};
+
+window.copyEarlyAccessAdmin = function() {
+  if(!_earlyAccessEmails.length) { toast('No hay emails para copiar', 'err'); return; }
+  navigator.clipboard.writeText(_earlyAccessEmails.join('\n'));
+  toast('✓ ' + _earlyAccessEmails.length + ' emails copiados');
+};
+
+// ─────────────────────────────────────────────────────────
+// REDES SOCIALES ADMIN
+// ─────────────────────────────────────────────────────────
+window.loadSocialAdmin = async function() {
+  try {
+    const snap = await getDocs(collection(dbTienda, 'config'));
+    snap.forEach(function(d) {
+      if(d.id === 'social') {
+        const data = d.data();
+        const ig = document.getElementById('adminInstagram');
+        const tt = document.getElementById('adminTiktok');
+        if(ig) ig.value = data.instagram || '';
+        if(tt) tt.value = data.tiktok || '';
+      }
+    });
+  } catch(e) {}
+};
+
+window.saveSocialAdmin = async function() {
+  const instagram = document.getElementById('adminInstagram') ? document.getElementById('adminInstagram').value.trim() : '';
+  const tiktok = document.getElementById('adminTiktok') ? document.getElementById('adminTiktok').value.trim() : '';
+  try {
+    await setDoc(doc(dbTienda, 'config', 'social'), { instagram, tiktok });
+    toast('✓ Redes guardadas');
+  } catch(e) { toast('Error guardando', 'err'); }
+};
+
+// ─────────────────────────────────────────────────────────
+// CONTACTO ADMIN
+// ─────────────────────────────────────────────────────────
+window.loadContactAdmin = async function() {
+  try {
+    const snap = await getDocs(collection(dbTienda, 'config'));
+    snap.forEach(function(d) {
+      if(d.id === 'contact') {
+        const data = d.data();
+        const ph = document.getElementById('adminPhone');
+        const em = document.getElementById('adminEmail');
+        if(ph) ph.value = data.phone || '';
+        if(em) em.value = data.email || '';
+      }
+    });
+  } catch(e) {}
+};
+
+window.saveContactAdmin = async function() {
+  const phone = document.getElementById('adminPhone') ? document.getElementById('adminPhone').value.trim() : '';
+  const email = document.getElementById('adminEmail') ? document.getElementById('adminEmail').value.trim() : '';
+  try {
+    await setDoc(doc(dbTienda, 'config', 'contact'), { phone, email });
+    toast('✓ Contacto guardado');
+  } catch(e) { toast('Error guardando', 'err'); }
 };
 
 // ─────────────────────────────────────────────────────────
