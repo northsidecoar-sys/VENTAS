@@ -1334,24 +1334,41 @@ window.showTab = function(t) {
 // ─────────────────────────────────────────────────────────
 let _earlyAccessEmails = [];
 
+let _earlyAccessDocs = []; // { email, docId }
+
 window.loadEarlyAccessAdmin = async function() {
   const listEl = document.getElementById('earlyAccessAdminList');
   if(!listEl) return;
   listEl.innerHTML = '<span style="color:var(--muted)">Cargando...</span>';
   try {
     const snap = await getDocs(collection(dbTienda, 'early_access'));
+    _earlyAccessDocs = [];
     _earlyAccessEmails = [];
-    snap.forEach(d => _earlyAccessEmails.push(d.data().email));
-    if(_earlyAccessEmails.length === 0) {
+    snap.forEach(d => {
+      _earlyAccessDocs.push({ email: d.data().email, docId: d.id });
+      _earlyAccessEmails.push(d.data().email);
+    });
+    if(_earlyAccessDocs.length === 0) {
       listEl.innerHTML = '<span style="color:var(--muted)">Todavía no hay emails registrados.</span>';
       return;
     }
-    listEl.innerHTML = _earlyAccessEmails.map(function(em, i) {
-      return '<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:0.82rem;">' +
-        '<span style="color:var(--muted);margin-right:10px;">' + (i+1) + '.</span>' + em + '</div>';
+    listEl.innerHTML = _earlyAccessDocs.map(function(item, i) {
+      return '<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">' +
+        '<span style="font-size:0.82rem;"><span style="color:var(--muted);margin-right:10px;">' + (i+1) + '.</span>' + item.email + '</span>' +
+        '<button onclick="window.deleteEarlyAccess(\'' + item.docId + '\')" style="background:none;border:1px solid var(--border);color:var(--accent2);border-radius:6px;padding:3px 10px;font-size:0.68rem;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background=\'rgba(240,74,122,0.1)\'" onmouseout="this.style.background=\'none\'">✕ Eliminar</button>' +
+      '</div>';
     }).join('') +
-    '<div style="margin-top:6px;font-size:0.72rem;color:var(--muted);">' + _earlyAccessEmails.length + ' registrados</div>';
+    '<div style="margin-top:8px;font-size:0.72rem;color:var(--muted);">' + _earlyAccessDocs.length + ' registrados</div>';
   } catch(e) { listEl.innerHTML = '<span style="color:var(--accent2)">Error cargando lista.</span>'; }
+};
+
+window.deleteEarlyAccess = async function(docId) {
+  if(!confirm('¿Eliminar este email de la lista?')) return;
+  try {
+    await deleteDoc(doc(dbTienda, 'early_access', docId));
+    toast('✓ Email eliminado');
+    window.loadEarlyAccessAdmin(); // refrescar lista
+  } catch(e) { toast('Error eliminando', 'err'); }
 };
 
 window.copyEarlyAccessAdmin = function() {
