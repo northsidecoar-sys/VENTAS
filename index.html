@@ -524,11 +524,32 @@
     <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:24px;display:flex;flex-direction:column;align-items:center;gap:20px;">
       <div id="localAdminDot" style="width:18px;height:18px;border-radius:50%;background:#888;transition:all 0.4s;"></div>
       <div id="localAdminLabel" style="font-size:1rem;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--fg);">—</div>
-      <div style="display:flex;gap:12px;">
+      <div style="display:flex;gap:12px;flex-wrap:wrap;justify-content:center;">
         <button class="abtn" id="btnLocalOpen" onclick="window.setLocalStatus(true)" style="background:#22c55e;border-color:#22c55e;color:#fff;min-width:120px;">✓ Abrir local</button>
+        <button class="abtn" id="btnScheduleMode" onclick="window.toggleScheduleMode()" style="background:#6366f1;border-color:#6366f1;color:#fff;min-width:140px;">📅 Horarios programados</button>
         <button class="abtn sec" id="btnLocalClose" onclick="window.setLocalStatus(false)" style="min-width:120px;">✕ Cerrar local</button>
       </div>
       <div style="font-size:0.72rem;color:var(--muted);text-align:center;">El estado se refleja en tiempo real en la tienda.</div>
+    </div>
+
+    <!-- HORARIOS PROGRAMADOS -->
+    <div id="scheduleSection" style="display:none">
+    <div style="margin-top:24px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.85rem;margin-bottom:12px;">Horarios programados</div>
+    <div style="font-size:0.72rem;color:var(--muted);margin-bottom:16px;">El local se abre y cierra automáticamente según estos horarios. El botón manual siempre tiene prioridad.</div>
+
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;">
+      <!-- Header -->
+      <div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 80px;gap:0;padding:10px 16px;border-bottom:1px solid var(--border);font-size:0.65rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);">
+        <span>Día</span><span>Abre</span><span>Cierra</span><span>Activo</span>
+      </div>
+      <!-- Rows -->
+      <div id="scheduleRows"></div>
+    </div>
+
+    <div style="display:flex;gap:10px;margin-top:16px;">
+      <button class="abtn" onclick="window.saveSchedule()">Guardar horarios</button>
+      <div style="font-size:0.72rem;color:var(--muted);display:flex;align-items:center;">Los cambios aplican desde el próximo minuto.</div>
+    </div>
     </div>
   </div>
   <div class="pane" id="pane-earlyaccess">
@@ -1368,11 +1389,104 @@ window.loadLocalAdmin = async function() {
 
 window.setLocalStatus = async function(isOpen) {
   try {
-    await setDoc(doc(dbTienda, 'config', 'local'), { open: isOpen });
+    await setDoc(doc(dbTienda, 'config', 'local'), { open: isOpen }, { merge: true });
     applyLocalAdminUI(isOpen);
     toast(isOpen ? '✓ Local marcado como abierto' : '✓ Local marcado como cerrado');
   } catch(e) { toast('Error guardando estado', 'err'); }
 };
+
+// ─────────────────────────────────────────────────────────
+// HORARIOS PROGRAMADOS
+// ─────────────────────────────────────────────────────────
+const DIAS = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+let _schedule = DIAS.map(function(d) {
+  return { dia: d, abre: '10:00', cierra: '20:00', activo: false };
+});
+
+function renderScheduleRows() {
+  const container = document.getElementById('scheduleRows');
+  if(!container) return;
+  container.innerHTML = _schedule.map(function(s, i) {
+    return '<div style="display:grid;grid-template-columns:1.2fr 1fr 1fr 80px;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);font-size:0.82rem;">' +
+      '<span style="color:var(--fg)">' + s.dia + '</span>' +
+      '<input type="time" value="' + s.abre + '" onchange="window.updateSchedule(' + i + ',\'abre\',this.value)" style="background:var(--surface2,#1a1a1a);border:1px solid var(--border);color:var(--fg);border-radius:6px;padding:4px 8px;font-size:0.78rem;width:90px;">' +
+      '<input type="time" value="' + s.cierra + '" onchange="window.updateSchedule(' + i + ',\'cierra\',this.value)" style="background:var(--surface2,#1a1a1a);border:1px solid var(--border);color:var(--fg);border-radius:6px;padding:4px 8px;font-size:0.78rem;width:90px;">' +
+      '<label style="display:flex;align-items:center;justify-content:center;cursor:pointer;">' +
+        '<div onclick="window.toggleScheduleDay(' + i + ')" style="width:22px;height:22px;border-radius:5px;border:2px solid ' + (s.activo ? '#22c55e' : 'var(--border)') + ';background:' + (s.activo ? '#22c55e' : 'transparent') + ';display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all 0.2s;">' +
+          (s.activo ? '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>' : '') +
+        '</div>' +
+      '</label>' +
+    '</div>';
+  }).join('');
+}
+
+window.updateSchedule = function(i, field, value) {
+  _schedule[i][field] = value;
+};
+
+window.toggleScheduleDay = function(i) {
+  _schedule[i].activo = !_schedule[i].activo;
+  renderScheduleRows();
+};
+
+window.toggleScheduleMode = async function() {
+  const btn = document.getElementById('btnScheduleMode');
+  const scheduleSection = document.getElementById('scheduleSection');
+  if(!scheduleSection) return;
+  const isVisible = scheduleSection.style.display !== 'none';
+  scheduleSection.style.display = isVisible ? 'none' : 'block';
+  if(btn) btn.style.background = isVisible ? '#6366f1' : '#4f46e5';
+};
+
+window.loadLocalAdmin = async function() {
+  try {
+    const snap = await getDocs(collection(dbTienda, 'config'));
+    let isOpen = false;
+    snap.forEach(function(d) {
+      if(d.id === 'local') {
+        isOpen = !!d.data().open;
+        if(d.data().schedule) _schedule = d.data().schedule;
+      }
+    });
+    applyLocalAdminUI(isOpen);
+  } catch(e) {}
+  renderScheduleRows();
+  // Iniciar chequeo automático de horarios cada minuto
+  checkScheduleNow();
+  if(window._scheduleInterval) clearInterval(window._scheduleInterval);
+  window._scheduleInterval = setInterval(checkScheduleNow, 60000);
+};
+
+window.saveSchedule = async function() {
+  try {
+    await setDoc(doc(dbTienda, 'config', 'local'), { schedule: _schedule }, { merge: true });
+    toast('✓ Horarios guardados');
+    checkScheduleNow();
+  } catch(e) { toast('Error guardando horarios', 'err'); }
+};
+
+async function checkScheduleNow() {
+  const now = new Date();
+  // 0=Dom,1=Lun...6=Sab → convertir a nuestro índice (0=Lun...6=Dom)
+  const dayIndex = (now.getDay() + 6) % 7;
+  const hhmm = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+
+  const s = _schedule[dayIndex];
+  if(!s || !s.activo) return; // día no programado, no toca nada
+
+  const shouldBeOpen = hhmm >= s.abre && hhmm < s.cierra;
+
+  // Solo actualiza si hay cambio real para no pisar el manual
+  try {
+    const snap = await getDocs(collection(dbTienda, 'config'));
+    let currentOpen = null;
+    snap.forEach(function(d){ if(d.id === 'local') currentOpen = !!d.data().open; });
+    if(currentOpen !== shouldBeOpen) {
+      await setDoc(doc(dbTienda, 'config', 'local'), { open: shouldBeOpen }, { merge: true });
+      applyLocalAdminUI(shouldBeOpen);
+    }
+  } catch(e) {}
+}
 
 // ─────────────────────────────────────────────────────────
 // EARLY ACCESS ADMIN
