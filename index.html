@@ -686,6 +686,14 @@
           <option value="REMERAS"><option value="ACCESORIOS">
         </datalist>
       </div>
+      <div class="pm-field">
+        <label>Género</label>
+        <select id="pmGender">
+          <option value="unisex">Unisex</option>
+          <option value="woman">Woman</option>
+          <option value="man">Man</option>
+        </select>
+      </div>
     </div>
     <div class="pm-grid">
       <div class="pm-field">
@@ -1827,6 +1835,7 @@ window.editProduct = function(docId) {
   document.getElementById('pmDocId').value = docId;
   document.getElementById('pmName').value = p.name||'';
   document.getElementById('pmCat').value = p.cat||'';
+  var pmg = document.getElementById('pmGender'); if(pmg) pmg.value = p.gender||'unisex';
   document.getElementById('pmPrice').value = p.price||'';
   document.getElementById('pmOriginalPrice').value = p.originalPrice||'';
   document.getElementById('pmSizes').value = p.sizes||'';
@@ -1873,6 +1882,7 @@ window.saveProdModal = async function() {
   var docId    = document.getElementById('pmDocId').value;
   var name     = document.getElementById('pmName').value.trim();
   var cat      = document.getElementById('pmCat').value.trim();
+  var gender   = document.getElementById('pmGender') ? document.getElementById('pmGender').value : 'unisex';
   var priceVal = parseFloat(document.getElementById('pmPrice').value);
   var origPrice= parseFloat(document.getElementById('pmOriginalPrice').value)||null;
   var sizes    = document.getElementById('pmSizes').value.trim();
@@ -1886,7 +1896,7 @@ window.saveProdModal = async function() {
   saveBtn.textContent = 'Guardando...';
   saveBtn.disabled = true;
 
-  var data = { name:name, cat:cat, price:priceVal, sizes:sizes, desc:desc,
+  var data = { name:name, cat:cat, gender:gender, price:priceVal, sizes:sizes, desc:desc,
     originalPrice:(origPrice&&origPrice>priceVal?origPrice:null) };
 
   try {
@@ -2290,6 +2300,7 @@ window.adminOpenAddProduct = function() {
   pmCurrentImgs = [];
   _baseAdminOpen();
   window.renderPmImgs();
+  var pmg3 = document.getElementById('pmGender'); if(pmg3) pmg3.value = 'unisex';
   var st=document.getElementById('pmImgUploadStatus'); if(st) st.textContent='';
 };
 
@@ -2299,6 +2310,7 @@ window.editProduct = function(docId) {
   var p = adminProducts.find(function(x){ return x._docId===docId; });
   pmCurrentImgs = (p && p.imgs) ? JSON.parse(JSON.stringify(p.imgs)) : [];
   _baseEditProduct(docId);
+  var pmg2 = document.getElementById('pmGender'); if(pmg2 && p) pmg2.value = p.gender||'unisex';
   window.renderPmImgs();
   var st=document.getElementById('pmImgUploadStatus'); if(st) st.textContent='';
 };
@@ -2308,6 +2320,7 @@ window.saveProdModal = async function() {
   var docId    = document.getElementById('pmDocId').value;
   var name     = document.getElementById('pmName').value.trim();
   var cat      = document.getElementById('pmCat').value.trim();
+  var gender   = document.getElementById('pmGender') ? document.getElementById('pmGender').value : 'unisex';
   var priceVal = parseFloat(document.getElementById('pmPrice').value);
   var origPrice= parseFloat(document.getElementById('pmOriginalPrice').value)||null;
   var sizes    = document.getElementById('pmSizes').value.trim();
@@ -2326,7 +2339,7 @@ window.saveProdModal = async function() {
   saveBtn.disabled = true;
 
   var data = {
-    name:name, cat:cat, price:priceVal, sizes:sizes, desc:desc,
+    name:name, cat:cat, gender:gender, price:priceVal, sizes:sizes, desc:desc,
     originalPrice:(origPrice&&origPrice>priceVal?origPrice:null),
     imgs: pmCurrentImgs,
     sizeGuide: sizeGuide.length ? sizeGuide : null,
