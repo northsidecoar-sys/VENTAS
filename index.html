@@ -1073,6 +1073,7 @@ function renderOrderCard(p) {
           <div class="oname">${p.userName || 'Cliente'}</div>
           <div class="odate">🕐 ${fecha}</div>
           ${p.userEmail ? `<div class="oemail">${p.userEmail}</div>` : ''}
+          ${p.userPhone ? `<div class="oemail" style="color:#22c55e">📲 ${p.userPhone}</div>` : ''}
         </div>
         <div class="ocard-right">
           <div class="ototal">$${total.toLocaleString('es-AR')}</div>
@@ -1096,7 +1097,7 @@ function renderOrderCard(p) {
         </div>` : (p.payment === 'transferencia' || p.payment === 'mercadopago') ? `
         <div style="margin-bottom:0.5rem;width:100%;padding:0.35rem 0.6rem;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:0.7rem;color:#856404">⚠️ Sin comprobante adjunto</div>` : ''}
         <div class="status-control">${statusBtns}</div>
-        <button class="sbtn" style="border-color:var(--accent2);color:var(--accent2);flex-shrink:0" onclick="deletePedido('${p._docId}')">🗑 Borrar</button>
+        <button class="sbtn" style="border-color:var(--accent2);color:var(--accent2);flex-shrink:0" onclick="openDeleteModal('${p._docId}','${p.userPhone||''}','${p.orderId||p._docId.substring(0,12).toUpperCase()}','${(p.userName||'cliente').replace(/'/g,'')}')">🗑 Borrar</button>
       </div>
     </div>
   `;
@@ -1127,14 +1128,56 @@ window.updateEstado = async function(docId, nuevoEstado) {
 };
 
 // ─────────────────────────────────────────────────────────
-// BORRAR PEDIDO
+// BORRAR PEDIDO CON RAZÓN + WPP
 // ─────────────────────────────────────────────────────────
-window.deletePedido = async function(docId) {
-  if (!confirm('¿Eliminar este pedido? Esta acción no se puede deshacer.')) return;
+let _deleteDocId = null;
+let _deletePhone = null;
+let _deleteOrderId = null;
+let _deleteClientName = null;
+
+window.openDeleteModal = function(docId, phone, orderId, clientName) {
+  _deleteDocId = docId;
+  _deletePhone = phone;
+  _deleteOrderId = orderId;
+  _deleteClientName = clientName;
+  document.getElementById('deleteReason').value = '';
+  document.getElementById('deleteReasonCustom').value = '';
+  const waInfo = document.getElementById('deleteWaInfo');
+  if(waInfo) waInfo.style.display = phone ? 'block' : 'none';
+  const modal = document.getElementById('deleteModal');
+  if(modal) modal.style.display = 'flex';
+};
+
+window.closeDeleteModal = function() {
+  const modal = document.getElementById('deleteModal');
+  if(modal) modal.style.display = 'none';
+  _deleteDocId = null; _deletePhone = null;
+};
+
+window.confirmDeletePedido = async function() {
+  const reason = document.getElementById('deleteReason').value;
+  const extra = document.getElementById('deleteReasonCustom').value.trim();
+  if(!reason) { toast('Seleccioná una razón', 'err'); return; }
+
+  const fullReason = extra ? reason + ': ' + extra : reason;
+
+  // Send WhatsApp if phone available
+  if(_deletePhone) {
+    const phone = _deletePhone.replace(/\D/g,'');
+    const waNum = phone.startsWith('54') ? phone : '54' + phone;
+    const msg = `Hola ${_deleteClientName || ''}! Te escribimos desde Northside.\n\n` +
+      `Tu pedido *${_deleteOrderId}* fue cancelado.\n\n` +
+      `📋 *Motivo:* ${fullReason}\n\n` +
+      `Si tenés alguna consulta, respondé este mensaje y te ayudamos. ¡Disculpá los inconvenientes!`;
+    window.open('https://wa.me/' + waNum + '?text=' + encodeURIComponent(msg), '_blank');
+  }
+
+  // Delete from Firestore
   setSyncStatus('syncing');
   try {
-    await deleteDoc(doc(dbTienda, 'orders', docId));
+    await deleteDoc(doc(dbTienda, 'orders', _deleteDocId));
     toast('Pedido eliminado');
+    window.closeDeleteModal();
   } catch(e) {
     console.error(e);
     toast('Error al eliminar', 'err');
@@ -2525,5 +2568,33 @@ window.saveProductOrder = async function() {
 };
 
 </script>
+<!-- MODAL ELIMINAR PEDIDO -->
+<div id="deleteModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:999;align-items:center;justify-content:center;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:90%;max-width:460px;display:flex;flex-direction:column;gap:16px;">
+    <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:1rem;">Eliminar pedido</div>
+    <div style="font-size:0.78rem;color:var(--muted);">Escribí el motivo. Si el cliente tiene WhatsApp registrado, le va a llegar un mensaje automáticamente.</div>
+    <div>
+      <div style="font-size:0.68rem;letter-spacing:0.1em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Razón *</div>
+      <select id="deleteReason" style="width:100%;background:var(--surface2,#1a1a1a);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:10px 12px;font-size:0.82rem;font-family:'DM Sans',sans-serif;margin-bottom:8px;">
+        <option value="">— Seleccioná un motivo —</option>
+        <option value="Sin stock del producto seleccionado">Sin stock del producto seleccionado</option>
+        <option value="Pago no recibido">Pago no recibido</option>
+        <option value="Pedido duplicado">Pedido duplicado</option>
+        <option value="Cliente solicitó cancelación">Cliente solicitó cancelación</option>
+        <option value="Datos de envío incorrectos">Datos de envío incorrectos</option>
+        <option value="Otro">Otro</option>
+      </select>
+      <textarea id="deleteReasonCustom" placeholder="Detalle adicional (opcional)" style="width:100%;background:var(--surface2,#1a1a1a);border:1px solid var(--border);color:var(--fg);border-radius:8px;padding:10px 12px;font-size:0.82rem;font-family:'DM Sans',sans-serif;resize:vertical;min-height:70px;"></textarea>
+    </div>
+    <div id="deleteWaInfo" style="font-size:0.72rem;color:var(--muted);padding:8px 12px;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.2);border-radius:8px;display:none;">
+      📲 Se enviará un mensaje de WhatsApp al cliente
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="abtn sec" onclick="window.closeDeleteModal()">Cancelar</button>
+      <button class="abtn" onclick="window.confirmDeletePedido()" style="background:#ef4444;border-color:#ef4444;color:#fff;">Eliminar y notificar</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
