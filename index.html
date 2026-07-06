@@ -14,7 +14,7 @@
   }
   body.theme-dark {
     --bg:#0d0d0f; --surface:#16161a; --surface2:#1e1e24; --border:#2a2a35;
-    --accent:#c8f04a; --accent2:#f04a7a; --accent3:#4ac8f0;
+    --accent:#d4af6a; --accent2:#f04a7a; --accent3:#4ac8f0;
     --text:#e8e8f0; --muted:#6b6b80; --success:#4af0a0; --warning:#f0c84a;
   }
   *{box-sizing:border-box;margin:0;padding:0;}
@@ -501,9 +501,9 @@
   <div class="tab active" onclick="showTab('resumen')">📊 Resumen</div>
   <div class="tab" onclick="showTab('productos')">📦 Productos</div>
   <div class="tab" onclick="showTab('config')">⚙ Configuración</div>
-  <div class="tab" onclick="showTab('carritos')">🛒 Carritos <span class="tbadge" id="tab-badge-carritos">0</span></div>
   <div class="tab" onclick="showTab('ventasind')">💰 Ventas Ind</div>
   <div class="tab" onclick="showTab('compras')">📝 Lista de Compras</div>
+  <div class="tab" onclick="showTab('carritos')">🛒 Carritos <span class="tbadge" id="tab-badge-carritos">0</span></div>
 </div>
 
 <main>
@@ -2245,7 +2245,7 @@ window.scRenderMain = function() {
 
 window.showTab = function(t) {
   document.querySelectorAll('.tab').forEach((el,i) => {
-    const names = ['pedidos','resumen','productos','config','carritos','ventasind','compras'];
+    const names = ['pedidos','resumen','productos','config','ventasind','compras','carritos'];
     el.classList.toggle('active', names[i]===t);
   });
   document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('active'); });
