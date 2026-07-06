@@ -11,13 +11,21 @@
     --accent:#c8f04a; --accent2:#f04a7a; --accent3:#4ac8f0;
     --text:#e8e8f0; --muted:#6b6b80; --success:#4af0a0; --warning:#f0c84a;
   }
+  body.theme-light {
+    --bg:#f5f5f7; --surface:#ffffff; --surface2:#eeeef2; --border:#dcdce4;
+    --accent:#6b9a1f; --accent2:#c8305a; --accent3:#1f7ba3;
+    --text:#1a1a20; --muted:#767685; --success:#1f9a5c; --warning:#b8860b;
+  }
   *{box-sizing:border-box;margin:0;padding:0;}
   body{background:var(--bg);color:var(--text);font-family:'DM Mono',monospace;min-height:100vh;overflow-x:hidden;}
 
   /* ── HEADER ── */
-  header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:10px;}
+  header{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;gap:10px;flex-wrap:wrap;}
   .logo{font-family:'Syne',sans-serif;font-weight:800;font-size:1.2rem;color:var(--accent);flex-shrink:0;}
   .logo span{color:var(--text);}
+  .global-search-wrap{flex:1;min-width:180px;max-width:420px;}
+  .global-search-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:8px 12px;border-radius:8px;font-size:0.78rem;font-family:'DM Mono',monospace;}
+  .global-search-input:focus{outline:none;border-color:var(--accent);}
   .header-right{display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
   .sync-label{font-size:0.65rem;color:var(--muted);display:flex;align-items:center;gap:5px;}
   .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--muted);flex-shrink:0;transition:background 0.3s;}
@@ -34,6 +42,13 @@
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
   .tab .tbadge{display:inline-block;background:var(--accent);color:#0d0d0f;border-radius:10px;padding:1px 6px;font-size:0.6rem;margin-left:4px;font-weight:700;min-width:18px;text-align:center;}
   .tab .tbadge.danger{background:var(--accent2);}
+
+  /* ── CONFIG SUB-NAV ── */
+  .cfg-subnav{display:flex;gap:6px;margin-bottom:1.1rem;flex-wrap:wrap;border-bottom:1px solid var(--border);padding-bottom:.8rem;}
+  .cfg-subtab{background:var(--surface);border:1px solid var(--border);color:var(--muted);padding:.5rem .9rem;font-size:.72rem;border-radius:8px;cursor:pointer;transition:all .2s;font-family:'DM Mono',monospace;}
+  .cfg-subtab:hover{border-color:var(--accent3);color:var(--accent3);}
+  .cfg-subtab.active{background:var(--accent);color:#0d0d0f;border-color:var(--accent);font-weight:700;}
+  .cfg-sub.active{display:block;}
 
   /* ── LAYOUT ── */
   main{max-width:760px;margin:0 auto;padding:20px 16px 100px;}
@@ -75,6 +90,7 @@
   .ocard-info .odate{font-size:0.68rem;color:var(--muted);margin-top:3px;}
   .ocard-info .oemail{font-size:0.68rem;color:var(--muted);margin-top:2px;}
   .ocard-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0;}
+  .ocard-chevron{color:var(--muted);font-size:0.9rem;margin-top:2px;}
   .ototal{font-family:'Syne',sans-serif;font-weight:800;font-size:1.1rem;color:var(--accent);}
   .otype-badge{font-size:0.6rem;padding:3px 8px;border-radius:6px;letter-spacing:0.5px;text-transform:uppercase;font-weight:600;}
   .otype-whatsapp{background:rgba(37,211,102,0.15);color:#25D366;border:1px solid rgba(37,211,102,0.3);}
@@ -315,7 +331,13 @@
 
 <header>
   <div class="logo">NORTH<span>ADMIN</span></div>
+  <div class="global-search-wrap">
+    <input type="text" id="globalSearch" class="global-search-input" placeholder="🔍 Buscar pedido o producto..." onkeydown="if(event.key==='Enter') window.doGlobalSearch()">
+  </div>
   <div class="header-right">
+    <button class="notif-bell" id="theme-toggle" onclick="window.toggleTheme()" title="Cambiar tema claro/oscuro">
+      <span id="theme-icon">🌙</span>
+    </button>
     <button class="notif-bell" id="notif-toggle" onclick="toggleSoundNotif()" title="Notificación sonora al entrar un pedido">
       <span class="sound-icon">🔔</span> Sonido <span id="sound-status">OFF</span>
     </button>
@@ -334,18 +356,12 @@
 </div>
 
 <div class="tabs">
-  <div class="tab active" onclick="showTab('pedidos')">Pedidos <span class="tbadge danger" id="tab-badge-pedidos">0</span></div>
-  <div class="tab" onclick="showTab('resumen')">Resumen</div>
+  <div class="tab" onclick="showTab('pedidos')">Pedidos <span class="tbadge danger" id="tab-badge-pedidos">0</span></div>
+  <div class="tab active" onclick="showTab('resumen')">📊 Resumen</div>
   <div class="tab" onclick="showTab('productos')">📦 Productos</div>
-  <div class="tab" onclick="showTab('stock')">🗃 Stock</div>
-  <div class="tab" onclick="showTab('banner')">🖼 Banner</div>
-  <div class="tab" onclick="showTab('config')">⚙ Config</div>
-  <div class="tab" onclick="showTab('nueva')">+ Venta</div>
-  <div class="tab" onclick="showTab('historial')">Historial</div>
+  <div class="tab" onclick="showTab('config')">⚙ Configuración</div>
   <div class="tab" onclick="showTab('earlyaccess')">Early Access</div>
-  <div class="tab" onclick="showTab('social')">Redes</div>
-  <div class="tab" onclick="showTab('contacto')">Contacto</div>
-  <div class="tab" onclick="showTab('carritos')">🛒 Carritos abandonados</div>
+  <div class="tab" onclick="showTab('carritos')">🛒 Carritos <span class="tbadge" id="tab-badge-carritos">0</span></div>
 </div>
 
 <main>
@@ -353,7 +369,7 @@
   <!-- ══════════════════════════════════════════════════════ -->
   <!-- TAB: PEDIDOS EN TIEMPO REAL -->
   <!-- ══════════════════════════════════════════════════════ -->
-  <div class="pane active" id="pane-pedidos">
+  <div class="pane" id="pane-pedidos">
 
     <div class="stat-grid four" style="margin-top:16px">
       <div class="stat-box accent">
@@ -394,7 +410,7 @@
   <!-- ══════════════════════════════════════════════════════ -->
   <!-- TAB: RESUMEN / ANALYTICS -->
   <!-- ══════════════════════════════════════════════════════ -->
-  <div class="pane" id="pane-resumen">
+  <div class="pane active" id="pane-resumen">
     <div style="margin-top:16px">
       <div class="section-title">Resumen Global (pedidos tienda)</div>
       <div class="stat-grid">
@@ -415,108 +431,6 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- TAB: NUEVA VENTA MANUAL -->
-  <!-- ══════════════════════════════════════════════════════ -->
-  <div class="pane" id="pane-nueva">
-
-    <div class="card" style="margin-top:16px">
-      <div class="card-title"><span class="dot"></span> Cliente</div>
-      <div class="grid-2">
-        <div class="field">
-          <label>Nombre del Cliente</label>
-          <input type="text" id="cliente" placeholder="Ej: María González" autocomplete="name">
-        </div>
-        <div class="field">
-          <label>Precio Nafta ($/L)</label>
-          <input type="number" id="precio_nafta" value="1500" min="0" step="50" oninput="recalc()" inputmode="numeric">
-        </div>
-      </div>
-      <div class="field" style="margin-top:12px">
-        <label>Punto de Encuentro</label>
-        <input type="text" id="punto_encuentro" placeholder="Ej: Av. Corrientes 1500, CABA" oninput="onDirInput()" autocomplete="off">
-        <div class="status-bar-st" id="st-bar">
-          <div class="spinner" id="st-spin" style="display:none"></div>
-          <span id="st-msg"></span>
-        </div>
-        <div class="manual-km-box" id="manual-box">
-          <label>Km (ida):</label>
-          <input type="number" id="km-manual" min="0" step="0.5" placeholder="km" oninput="onManualKm()">
-          <small>Calculamos igual con este dato</small>
-        </div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span> Vehículo y Nafta</div>
-      <div class="chip">📍 Origen: Nordelta, Tigre</div>
-      <div class="vehicle-grid">
-        <div class="vehicle-card selected" onclick="selVeh(this,'corolla')">
-          <div class="ci">🚗</div><div class="cn">Corolla</div><div class="cc">10 km/L</div>
-        </div>
-        <div class="vehicle-card" onclick="selVeh(this,'fit')">
-          <div class="ci">🚙</div><div class="cn">Honda Fit</div><div class="cc">13 km/L</div>
-        </div>
-        <div class="vehicle-card" onclick="selVeh(this,'tigo')">
-          <div class="ci">🚕</div><div class="cn">Tiggo 3</div><div class="cc">11 km/L</div>
-        </div>
-      </div>
-      <div class="nafta-result" id="nafta-placeholder">
-        <div class="nafta-row"><span class="lbl">✏️ Escribí el punto de encuentro para calcular automáticamente</span></div>
-      </div>
-      <div class="nafta-result" id="nafta-detail" style="display:none">
-        <div class="nafta-row"><span class="lbl">Destino</span><span class="val" id="nd-dest">—</span></div>
-        <div class="nafta-row"><span class="lbl">Distancia ida</span><span class="val" id="nd-ida">—</span></div>
-        <div class="nafta-row"><span class="lbl">Total ida+vuelta</span><span class="val" id="nd-tot">—</span></div>
-        <div class="nafta-row"><span class="lbl">Litros</span><span class="val" id="nd-lit">—</span></div>
-        <div class="nafta-row hl"><span class="lbl">💸 Costo nafta</span><span class="val" id="nd-cos">—</span></div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="dot" style="background:var(--accent3)"></span> Productos</div>
-      <div id="prod-lista"></div>
-      <div class="btn-row">
-        <button class="btn" style="border:1px solid var(--accent);color:var(--accent);background:transparent" onclick="addProd()">+ Agregar Producto</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="card-title"><span class="dot" style="background:var(--success)"></span> Resumen</div>
-      <div class="resumen-grid">
-        <div class="stat-box"><div class="stat-label">Venta Total</div><div class="stat-value sv-accent" id="r-venta">$0</div></div>
-        <div class="stat-box"><div class="stat-label">Costo</div><div class="stat-value sv-info" id="r-costo">$0</div></div>
-        <div class="stat-box"><div class="stat-label">Ganancia</div><div class="stat-value sv-success" id="r-gan">$0</div></div>
-        <div class="stat-box"><div class="stat-label">Nafta</div><div class="stat-value sv-danger" id="r-nafta">$0</div></div>
-        <div class="stat-box" style="grid-column:1/-1;border-color:var(--success);background:rgba(74,240,160,0.04)">
-          <div class="stat-label">💰 Neto Final</div>
-          <div class="stat-value sv-success" id="r-neto" style="font-size:1.4rem">$0</div>
-        </div>
-      </div>
-      <div class="sep"></div>
-      <div class="grid-2">
-        <div class="field"><label>Gasto extra</label><input type="number" id="extra" placeholder="Ej: 2000" min="0" oninput="updRes()" inputmode="numeric"></div>
-        <div class="field"><label>Notas</label><input type="text" id="notas" placeholder="Observaciones..."></div>
-      </div>
-      <div class="btn-row">
-        <button class="btn btn-primary" onclick="saveVenta()">✓ Guardar Venta</button>
-        <button class="btn btn-danger" onclick="clearForm()">✕ Limpiar</button>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- ══════════════════════════════════════════════════════ -->
-  <!-- TAB: HISTORIAL VENTAS MANUALES -->
-  <!-- ══════════════════════════════════════════════════════ -->
-  <div class="pane" id="pane-historial">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 14px;flex-wrap:wrap;gap:10px">
-      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;display:flex;align-items:center;gap:8px">
-        Ventas manuales <span class="badge" id="hbadge">0</span>
-      </div>
-    </div>
-    <div id="hcards"><div class="empty-msg">Cargando ventas...</div></div>
-  </div>
 
   <!-- EARLY ACCESS -->
   <div class="pane" id="pane-earlyaccess">
@@ -527,38 +441,6 @@
       <button class="abtn" onclick="window.copyEarlyAccessAdmin()">Copiar todos</button>
     </div>
     <div id="earlyAccessAdminList" style="font-size:0.82rem;color:var(--muted);">Cargando...</div>
-  </div>
-
-  <!-- REDES SOCIALES -->
-  <div class="pane" id="pane-social">
-    <div style="margin:16px 0 20px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;">Redes Sociales</div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;">
-      <div>
-        <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Instagram</div>
-        <input class="ainp" id="adminInstagram" placeholder="https://instagram.com/northside" style="width:100%">
-      </div>
-      <div>
-        <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">TikTok</div>
-        <input class="ainp" id="adminTiktok" placeholder="https://tiktok.com/@northside" style="width:100%">
-      </div>
-      <button class="abtn" onclick="window.saveSocialAdmin()" style="align-self:flex-start">Guardar redes</button>
-    </div>
-  </div>
-
-  <!-- CONTACTO -->
-  <div class="pane" id="pane-contacto">
-    <div style="margin:16px 0 20px;font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;">Contacto (footer)</div>
-    <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;display:flex;flex-direction:column;gap:14px;">
-      <div>
-        <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Teléfono / WhatsApp</div>
-        <input class="ainp" id="adminPhone" placeholder="+54 9 11 1234-5678" style="width:100%">
-      </div>
-      <div>
-        <div style="font-size:0.68rem;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:6px;">Email de contacto</div>
-        <input class="ainp" id="adminEmail" placeholder="hola@thenorthside.com.ar" style="width:100%">
-      </div>
-      <button class="abtn" onclick="window.saveContactAdmin()" style="align-self:flex-start">Guardar contacto</button>
-    </div>
   </div>
 
   <!-- CARRITOS ABANDONADOS -->
@@ -574,14 +456,15 @@
   </div>
 
 
-<!-- ══ TAB: PRODUCTOS ══ -->
+<!-- ══ TAB: PRODUCTOS + STOCK ══ -->
 <section id="admintab-productos" class="admin-tab-section">
-  <h2>📦 Productos</h2>
+  <h2>📦 Productos y Stock</h2>
   <div style="display:flex;gap:.5rem;margin-bottom:.9rem;flex-wrap:wrap;align-items:center">
     <button class="abtn" onclick="window.adminOpenAddProduct()">+ Nuevo</button>
     <button class="abtn sec" onclick="window.loadAdminProducts()">↺ Actualizar</button>
-    <span style="font-size:.72rem;color:var(--muted);margin-left:.5rem">⠿ Arrastrá las tarjetas para cambiar el orden</span>
+    <input id="productsSearch" class="ainp" style="flex:1;min-width:160px" placeholder="🔍 Buscar producto..." oninput="window.filterAdminProducts()">
   </div>
+  <span style="font-size:.72rem;color:var(--muted);display:block;margin-bottom:.7rem">⠿ Arrastrá las tarjetas para cambiar el orden · Tocá "Stock" en cada producto para editar cantidades</span>
   <div id="adminProductsList"></div>
   <div class="order-save-bar" id="orderSaveBar">
     <span class="order-indicator">Orden modificado — los cambios no se guardan automáticamente</span>
@@ -589,95 +472,116 @@
   </div>
 </section>
 
-<!-- ══ TAB: STOCK ══ -->
-<section id="admintab-stock" class="admin-tab-section">
-  <h2>🗃 Stock por variante</h2>
-  <div style="display:flex;gap:.5rem;margin-bottom:.9rem">
-    <input id="stockSearch" class="ainp" style="flex:1" placeholder="Buscar producto..." oninput="window.filterStockProducts()">
-    <button class="abtn sec" onclick="window.loadStockPanel()">↺</button>
-  </div>
-  <div id="stockPanelList"></div>
-</section>
-
-<!-- ══ TAB: BANNER ══ -->
-<section id="admintab-banner" class="admin-tab-section">
-  <h2>🖼 Banner</h2>
-
-  <!-- Preview en tiempo real del banner (igual que ve el cliente) -->
-  <div class="bnr-preview-wrap">
-    <div class="bnr-preview-header">
-      <span>Vista del cliente — northside</span>
-      <em id="bnrPreviewCount">0 slides</em>
-    </div>
-    <div class="bnr-stage" id="bnrStage">
-      <div class="bnr-empty" id="bnrEmpty">
-        📷 Sin slides — agregá imágenes abajo
-      </div>
-      <div class="bnr-track" id="bnrTrack" style="display:none"></div>
-      <button class="bnr-arrow left" id="bnrPrev" onclick="window.bnrPrev()" style="display:none">&#8592;</button>
-      <button class="bnr-arrow right" id="bnrNext" onclick="window.bnrNext()" style="display:none">&#8594;</button>
-      <div class="bnr-dots" id="bnrDots" style="display:none"></div>
-    </div>
-  </div>
-
-  <div id="bannerAdminList" style="margin-bottom:1rem"></div>
-  <div class="acfgbox">
-    <h3>Agregar slide</h3>
-    <div class="upload-zone" style="margin-bottom:.7rem">
-      <input type="file" id="bannerUploadInput" accept="image/*" onchange="window.handleBannerUpload(event)">
-      📸 Subí la imagen
-    </div>
-    <div id="bannerUploadPreview" style="display:none;margin-bottom:.7rem">
-      <img id="bannerPreviewImg" src="" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px">
-    </div>
-    <select id="bannerProductLink" class="ainp" style="margin-bottom:.5rem"><option value="">— Sin producto vinculado —</option></select>
-    <select id="bannerPositionSelect" class="ainp" style="margin-bottom:.5rem">
-      <option value="center center">Centro</option>
-      <option value="top center">Arriba</option>
-      <option value="bottom center">Abajo</option>
-      <option value="center left">Izquierda</option>
-      <option value="center right">Derecha</option>
-    </select>
-    <button class="abtn" onclick="window.addBannerSlide()">Agregar slide</button>
-    <div id="bannerUploadStatus" style="font-size:.75rem;margin-top:.4rem;color:var(--muted)"></div>
-  </div>
-</section>
-
-<!-- ══ TAB: CONFIG ══ -->
+<!-- ══ TAB: CONFIGURACIÓN (unifica Pagos/Ticker/Cupones, Banner, Redes, Contacto) ══ -->
 <section id="admintab-config" class="admin-tab-section">
   <h2>⚙ Configuración</h2>
-  <div class="acfgbox">
-    <h3>💬 Mensaje de consulta puntual</h3>
-    <p style="font-size:.73rem;color:var(--muted);margin-bottom:.6rem">Este mensaje aparece cuando un cliente toca "Consulta puntual" en un producto.</p>
-    <label style="font-size:.75rem;color:var(--muted)">Texto del mensaje (podés incluir el nombre del producto con {producto})</label>
-    <textarea id="cfgConsultaMsg" class="ainp" style="height:80px;resize:vertical;margin-bottom:.5rem" placeholder="Hola! Quiero consultar sobre: {producto}"></textarea>
-    <label style="font-size:.75rem;color:var(--muted)">Número de WhatsApp (con código país, sin +)</label>
-    <input id="cfgWaNumber" class="ainp" style="margin-bottom:.5rem" placeholder="5491100000000">
-    <button class="abtn" onclick="window.saveConfig('consulta')">Guardar</button>
+
+  <div class="cfg-subnav">
+    <button class="cfg-subtab active" data-sub="pagos" onclick="window.showConfigSub('pagos',this)">💸 Pagos y Ticker</button>
+    <button class="cfg-subtab" data-sub="banner" onclick="window.showConfigSub('banner',this)">🖼 Banner</button>
+    <button class="cfg-subtab" data-sub="redes" onclick="window.showConfigSub('redes',this)">📱 Redes</button>
+    <button class="cfg-subtab" data-sub="contacto" onclick="window.showConfigSub('contacto',this)">☎ Contacto</button>
   </div>
-  <div class="acfgbox">
-    <h3>💸 Descuento transferencia</h3>
-    <label style="font-size:.75rem;color:var(--muted)">% descuento</label>
-    <input id="cfgTransferPct" class="ainp" type="number" style="margin-bottom:.5rem">
-    <button class="abtn" onclick="window.saveConfig('payment')">Guardar</button>
-  </div>
-  <div class="acfgbox">
-    <h3>📢 Ticker</h3>
-    <textarea id="cfgTicker" class="ainp" style="height:65px;resize:vertical;margin-bottom:.5rem" placeholder="Texto 1 // Texto 2 // Texto 3"></textarea>
-    <button class="abtn" onclick="window.saveConfig('ticker')">Guardar</button>
-  </div>
-  <div class="acfgbox">
-    <h3>🎟 Cupones</h3>
-    <div id="couponsList" style="margin-bottom:.7rem"></div>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:.5rem">
-      <input id="newCouponCode" class="ainp" placeholder="Código (ej: NORTE20)">
-      <select id="newCouponType" class="ainp">
-        <option value="pct">% porcentaje</option>
-        <option value="fixed">$ monto fijo</option>
-      </select>
-      <input id="newCouponValue" class="ainp" type="number" placeholder="Valor">
+
+  <!-- SUB: PAGOS / TICKER / CUPONES -->
+  <div class="cfg-sub active" id="cfgsub-pagos">
+    <div class="acfgbox">
+      <h3>💬 Mensaje de consulta puntual</h3>
+      <p style="font-size:.73rem;color:var(--muted);margin-bottom:.6rem">Este mensaje aparece cuando un cliente toca "Consulta puntual" en un producto.</p>
+      <label style="font-size:.75rem;color:var(--muted)">Texto del mensaje (podés incluir el nombre del producto con {producto})</label>
+      <textarea id="cfgConsultaMsg" class="ainp" style="height:80px;resize:vertical;margin-bottom:.5rem" placeholder="Hola! Quiero consultar sobre: {producto}"></textarea>
+      <label style="font-size:.75rem;color:var(--muted)">Número de WhatsApp (con código país, sin +)</label>
+      <input id="cfgWaNumber" class="ainp" style="margin-bottom:.5rem" placeholder="5491100000000">
+      <button class="abtn" onclick="window.saveConfig('consulta')">Guardar</button>
     </div>
-    <button class="abtn" onclick="window.createCoupon()">Crear cupón</button>
+    <div class="acfgbox">
+      <h3>💸 Descuento transferencia</h3>
+      <label style="font-size:.75rem;color:var(--muted)">% descuento</label>
+      <input id="cfgTransferPct" class="ainp" type="number" style="margin-bottom:.5rem">
+      <button class="abtn" onclick="window.saveConfig('payment')">Guardar</button>
+    </div>
+    <div class="acfgbox">
+      <h3>📢 Ticker</h3>
+      <textarea id="cfgTicker" class="ainp" style="height:65px;resize:vertical;margin-bottom:.5rem" placeholder="Texto 1 // Texto 2 // Texto 3"></textarea>
+      <button class="abtn" onclick="window.saveConfig('ticker')">Guardar</button>
+    </div>
+    <div class="acfgbox">
+      <h3>🎟 Cupones</h3>
+      <div id="couponsList" style="margin-bottom:.7rem"></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:.4rem;margin-bottom:.5rem">
+        <input id="newCouponCode" class="ainp" placeholder="Código (ej: NORTE20)">
+        <select id="newCouponType" class="ainp">
+          <option value="pct">% porcentaje</option>
+          <option value="fixed">$ monto fijo</option>
+        </select>
+        <input id="newCouponValue" class="ainp" type="number" placeholder="Valor">
+      </div>
+      <button class="abtn" onclick="window.createCoupon()">Crear cupón</button>
+    </div>
+  </div>
+
+  <!-- SUB: BANNER -->
+  <div class="cfg-sub" id="cfgsub-banner" style="display:none">
+    <div class="bnr-preview-wrap">
+      <div class="bnr-preview-header">
+        <span>Vista del cliente — northside</span>
+        <em id="bnrPreviewCount">0 slides</em>
+      </div>
+      <div class="bnr-stage" id="bnrStage">
+        <div class="bnr-empty" id="bnrEmpty">
+          📷 Sin slides — agregá imágenes abajo
+        </div>
+        <div class="bnr-track" id="bnrTrack" style="display:none"></div>
+        <button class="bnr-arrow left" id="bnrPrev" onclick="window.bnrPrev()" style="display:none">&#8592;</button>
+        <button class="bnr-arrow right" id="bnrNext" onclick="window.bnrNext()" style="display:none">&#8594;</button>
+        <div class="bnr-dots" id="bnrDots" style="display:none"></div>
+      </div>
+    </div>
+    <div id="bannerAdminList" style="margin-bottom:1rem"></div>
+    <div class="acfgbox">
+      <h3>Agregar slide</h3>
+      <div class="upload-zone" style="margin-bottom:.7rem">
+        <input type="file" id="bannerUploadInput" accept="image/*" onchange="window.handleBannerUpload(event)">
+        📸 Subí la imagen
+      </div>
+      <div id="bannerUploadPreview" style="display:none;margin-bottom:.7rem">
+        <img id="bannerPreviewImg" src="" style="width:100%;max-height:120px;object-fit:cover;border-radius:6px">
+      </div>
+      <select id="bannerProductLink" class="ainp" style="margin-bottom:.5rem"><option value="">— Sin producto vinculado —</option></select>
+      <select id="bannerPositionSelect" class="ainp" style="margin-bottom:.5rem">
+        <option value="center center">Centro</option>
+        <option value="top center">Arriba</option>
+        <option value="bottom center">Abajo</option>
+        <option value="center left">Izquierda</option>
+        <option value="center right">Derecha</option>
+      </select>
+      <button class="abtn" onclick="window.addBannerSlide()">Agregar slide</button>
+      <div id="bannerUploadStatus" style="font-size:.75rem;margin-top:.4rem;color:var(--muted)"></div>
+    </div>
+  </div>
+
+  <!-- SUB: REDES -->
+  <div class="cfg-sub" id="cfgsub-redes" style="display:none">
+    <div class="acfgbox">
+      <h3>📱 Redes Sociales</h3>
+      <label style="font-size:.75rem;color:var(--muted)">Instagram</label>
+      <input class="ainp" id="adminInstagram" placeholder="https://instagram.com/northside" style="margin-bottom:.5rem">
+      <label style="font-size:.75rem;color:var(--muted)">TikTok</label>
+      <input class="ainp" id="adminTiktok" placeholder="https://tiktok.com/@northside" style="margin-bottom:.5rem">
+      <button class="abtn" onclick="window.saveSocialAdmin()">Guardar redes</button>
+    </div>
+  </div>
+
+  <!-- SUB: CONTACTO -->
+  <div class="cfg-sub" id="cfgsub-contacto" style="display:none">
+    <div class="acfgbox">
+      <h3>☎ Contacto (footer)</h3>
+      <label style="font-size:.75rem;color:var(--muted)">Teléfono / WhatsApp</label>
+      <input class="ainp" id="adminPhone" placeholder="+54 9 11 1234-5678" style="margin-bottom:.5rem">
+      <label style="font-size:.75rem;color:var(--muted)">Email de contacto</label>
+      <input class="ainp" id="adminEmail" placeholder="hola@thenorthside.com.ar" style="margin-bottom:.5rem">
+      <button class="abtn" onclick="window.saveContactAdmin()">Guardar contacto</button>
+    </div>
   </div>
 </section>
 
@@ -917,6 +821,7 @@ onSnapshot(qPedidos, (snapshot) => {
   if (isFirstLoad) {
     isFirstLoad = false;
     document.getElementById('loading-overlay').style.display = 'none';
+    if(window.loadAbandonedCarts) window.loadAbandonedCarts();
   }
 
   setSyncStatus('online');
@@ -1088,7 +993,7 @@ function renderOrderCard(p) {
 
   return `
     <div class="ocard${isNew?' new-order':''}" id="ocard-${p._docId}">
-      <div class="ocard-top">
+      <div class="ocard-top" onclick="window.toggleOrderCard('${p._docId}')" style="cursor:pointer">
         <div class="ocard-info">
           <div class="oid">${p.orderId || p._docId.substring(0,12).toUpperCase()}</div>
           <div class="oname">${p.userName || 'Cliente'}</div>
@@ -1102,27 +1007,39 @@ function renderOrderCard(p) {
             ${orderType==='checkout_carrito'?'🛒 Checkout':'💬 WhatsApp'}
           </span>
           <span class="status-badge sb-${status}">${statusLabel(status)}</span>
+          <span class="ocard-chevron" id="chev-${p._docId}">${isNew?'▴':'▾'}</span>
         </div>
       </div>
-      <div class="ocard-items">${itemsHtml}</div>
-      ${chips.length ? `<div class="ocard-meta">${chips.join('')}</div>` : ''}
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
-        ${p.comprobanteUrl ? `
-        <div style="margin-bottom:0.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);width:100%">
-          <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">📎 Comprobante</div>
-          ${/\.(jpg|jpeg|png|gif|webp)/i.test(p.comprobanteUrl) || p.comprobanteUrl.startsWith('data:image') ? `
-            <a href="${p.comprobanteUrl}" target="_blank">
-              <img src="${p.comprobanteUrl}" style="max-width:240px;max-height:160px;object-fit:contain;border:1px solid var(--border);border-radius:4px;display:block;cursor:pointer" title="Ver en tamaño completo">
-            </a>
-          ` : `<a href="${p.comprobanteUrl}" target="_blank" style="font-size:0.78rem;color:var(--accent);text-decoration:none;border:1px solid var(--border);padding:0.3rem 0.6rem;border-radius:4px;display:inline-flex;align-items:center;gap:0.3rem">📄 Ver PDF</a>`}
-        </div>` : (p.payment === 'transferencia' || p.payment === 'mercadopago') ? `
-        <div style="margin-bottom:0.5rem;width:100%;padding:0.35rem 0.6rem;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:0.7rem;color:#856404">⚠️ Sin comprobante adjunto</div>` : ''}
-        <div class="status-control">${statusBtns}</div>
-        <button class="sbtn" style="border-color:var(--accent2);color:var(--accent2);flex-shrink:0" onclick="openDeleteModal('${p._docId}','${p.userPhone||''}','${p.orderId||p._docId.substring(0,12).toUpperCase()}','${(p.userName||'cliente').replace(/'/g,'')}')">🗑 Borrar</button>
+      <div class="ocard-body" id="obody-${p._docId}" style="display:${isNew?'block':'none'}">
+        <div class="ocard-items">${itemsHtml}</div>
+        ${chips.length ? `<div class="ocard-meta">${chips.join('')}</div>` : ''}
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px">
+          ${p.comprobanteUrl ? `
+          <div style="margin-bottom:0.5rem;padding-bottom:0.5rem;border-bottom:1px solid var(--border);width:100%">
+            <div style="font-size:0.65rem;color:var(--muted);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:0.35rem">📎 Comprobante</div>
+            ${/\.(jpg|jpeg|png|gif|webp)/i.test(p.comprobanteUrl) || p.comprobanteUrl.startsWith('data:image') ? `
+              <a href="${p.comprobanteUrl}" target="_blank">
+                <img src="${p.comprobanteUrl}" style="max-width:240px;max-height:160px;object-fit:contain;border:1px solid var(--border);border-radius:4px;display:block;cursor:pointer" title="Ver en tamaño completo">
+              </a>
+            ` : `<a href="${p.comprobanteUrl}" target="_blank" style="font-size:0.78rem;color:var(--accent);text-decoration:none;border:1px solid var(--border);padding:0.3rem 0.6rem;border-radius:4px;display:inline-flex;align-items:center;gap:0.3rem">📄 Ver PDF</a>`}
+          </div>` : (p.payment === 'transferencia' || p.payment === 'mercadopago') ? `
+          <div style="margin-bottom:0.5rem;width:100%;padding:0.35rem 0.6rem;background:#fff3cd;border:1px solid #ffc107;border-radius:4px;font-size:0.7rem;color:#856404">⚠️ Sin comprobante adjunto</div>` : ''}
+          <div class="status-control">${statusBtns}</div>
+          <button class="sbtn" style="border-color:var(--accent2);color:var(--accent2);flex-shrink:0" onclick="event.stopPropagation();openDeleteModal('${p._docId}','${p.userPhone||''}','${p.orderId||p._docId.substring(0,12).toUpperCase()}','${(p.userName||'cliente').replace(/'/g,'')}')">🗑 Borrar</button>
+        </div>
       </div>
     </div>
   `;
 }
+
+window.toggleOrderCard = function(docId) {
+  const body = document.getElementById('obody-' + docId);
+  const chev = document.getElementById('chev-' + docId);
+  if(!body) return;
+  const isOpen = body.style.display === 'block';
+  body.style.display = isOpen ? 'none' : 'block';
+  if(chev) chev.textContent = isOpen ? '▾' : '▴';
+};
 
 function statusLabel(s) {
   return {pendiente:'⏳ Pendiente',pagado:'✓ Pagado',enviado:'🚚 En camino',entregado:'✅ Entregado',cancelado:'✕ Cancelado'}[s] || s;
@@ -1386,6 +1303,12 @@ window.loadAbandonedCarts = async function() {
     carts = carts.filter(function(c){ return !c.completed; });
     carts.sort(function(a,b){ return (b.updatedAt||0) - (a.updatedAt||0); });
 
+    var badge = document.getElementById('tab-badge-carritos');
+    if(badge) {
+      badge.textContent = carts.length;
+      badge.className = 'tbadge' + (carts.length > 0 ? ' danger' : '');
+    }
+
     if(!carts.length) {
       listEl.innerHTML = '<div class="empty-msg">No hay carritos abandonados pendientes 🎉</div>';
       return;
@@ -1455,9 +1378,64 @@ window.dismissAbandonedCart = async function(docId) {
   }
 };
 
+window.doGlobalSearch = function() {
+  var q = (document.getElementById('globalSearch').value || '').trim().toLowerCase();
+  if(!q) return;
+
+  // 1. ¿Coincide con algún pedido?
+  var matchOrder = pedidos.some(function(p) {
+    var nombre = (p.userName||'').toLowerCase();
+    var id = (p.orderId||'').toLowerCase();
+    var items = (p.items||[]).map(function(i){ return (i.name||'').toLowerCase(); }).join(' ');
+    return nombre.includes(q) || id.includes(q) || items.includes(q);
+  });
+
+  if(matchOrder) {
+    window.showTab('pedidos');
+    var searchInput = document.getElementById('search-input');
+    if(searchInput) { searchInput.value = q; window.renderPedidos(); }
+    return;
+  }
+
+  // 2. Si no matchea pedido, buscar en productos
+  window.showTab('productos');
+  setTimeout(function() {
+    var prodSearch = document.getElementById('productsSearch');
+    if(prodSearch) { prodSearch.value = q; window.filterAdminProducts(); }
+  }, 400); // esperar a que carguen los productos
+};
+
+window.toggleTheme = function() {
+  var isLight = document.body.classList.toggle('theme-light');
+  var icon = document.getElementById('theme-icon');
+  if(icon) icon.textContent = isLight ? '☀️' : '🌙';
+  try { localStorage.setItem('ns_admin_theme', isLight ? 'light' : 'dark'); } catch(e) {}
+};
+
+// Aplicar tema guardado al cargar
+(function() {
+  try {
+    if(localStorage.getItem('ns_admin_theme') === 'light') {
+      document.body.classList.add('theme-light');
+      document.addEventListener('DOMContentLoaded', function() {
+        var icon = document.getElementById('theme-icon');
+        if(icon) icon.textContent = '☀️';
+      });
+    }
+  } catch(e) {}
+})();
+
+window.showConfigSub = function(sub, btn) {
+  document.querySelectorAll('.cfg-subtab').forEach(function(b){ b.classList.remove('active'); });
+  document.querySelectorAll('.cfg-sub').forEach(function(s){ s.style.display = 'none'; });
+  if(btn) btn.classList.add('active');
+  var panel = document.getElementById('cfgsub-' + sub);
+  if(panel) panel.style.display = 'block';
+};
+
 window.showTab = function(t) {
   document.querySelectorAll('.tab').forEach((el,i) => {
-    const names = ['pedidos','resumen','productos','stock','banner','config','nueva','historial','earlyaccess','social','contacto','carritos'];
+    const names = ['pedidos','resumen','productos','config','earlyaccess','carritos'];
     el.classList.toggle('active', names[i]===t);
   });
   document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('active'); });
@@ -1469,12 +1447,8 @@ window.showTab = function(t) {
   window.scrollTo(0,0);
   if(t==='resumen') renderResumen();
   if(t==='productos') window.loadAdminProducts();
-  if(t==='stock') window.loadStockPanel();
-  if(t==='banner') window.loadBannerAdmin();
-  if(t==='config') window.loadConfig();
+  if(t==='config') { window.loadConfig(); window.loadBannerAdmin(); window.loadSocialAdmin(); window.loadContactAdmin(); }
   if(t==='earlyaccess') window.loadEarlyAccessAdmin();
-  if(t==='social') window.loadSocialAdmin();
-  if(t==='contacto') window.loadContactAdmin();
   if(t==='carritos') window.loadAbandonedCarts();
 };
 
@@ -1883,9 +1857,10 @@ window.renderAdminProducts = function() {
   adminProducts.forEach(function(p) {
     var card = document.createElement('div');
     card.className = 'prod-admin-card';
+    card.dataset.name = (p.name||'').toLowerCase();
     var imgs = p.imgs || [];
     var thumbSrc = imgs.length ? (imgs[0].url || imgs[0].data || '') : '';
-    var stockStr = p.stock ? Object.entries(p.stock).slice(0,4).map(function(e){ return e[0]+':'+e[1]; }).join(' · ') : 'Sin stock';
+    var stockStr = p.stock ? Object.entries(p.stock).slice(0,4).map(function(e){ return e[0]+':'+e[1]; }).join(' · ') : 'Sin stock cargado';
 
     var hdr = document.createElement('div'); hdr.className = 'prod-admin-hdr';
     var left = document.createElement('div'); left.style.cssText = 'display:flex;align-items:center;gap:.6rem;min-width:0';
@@ -1898,15 +1873,82 @@ window.renderAdminProducts = function() {
     var sk = document.createElement('div'); sk.style.cssText='font-size:.67rem;color:var(--muted);margin-top:.1rem'; sk.textContent='📦 '+stockStr;
     info.append(nm,ct,sk); left.append(thumb,info);
 
-    var btns = document.createElement('div'); btns.style.cssText='display:flex;gap:.4rem;flex-shrink:0';
-    var eb = document.createElement('button'); eb.className='abtn'; eb.style.cssText='padding:.3rem .65rem;font-size:.7rem'; eb.textContent='✏ Editar';
+    var btns = document.createElement('div'); btns.style.cssText='display:flex;gap:.4rem;flex-shrink:0;flex-wrap:wrap';
     var localDocId = p._docId;
+    var stockBtn = document.createElement('button'); stockBtn.className='abtn sec'; stockBtn.style.cssText='padding:.3rem .65rem;font-size:.7rem'; stockBtn.textContent='🗃 Stock';
+    stockBtn.onclick = function(){ window.toggleStockPanel(localDocId); };
+    var eb = document.createElement('button'); eb.className='abtn'; eb.style.cssText='padding:.3rem .65rem;font-size:.7rem'; eb.textContent='✏ Editar';
     eb.onclick = function(){ window.editProduct(localDocId); };
     var db2 = document.createElement('button'); db2.className='abtn red'; db2.style.cssText='padding:.3rem .65rem;font-size:.7rem'; db2.textContent='✕';
     db2.onclick = function(){ window.deleteProduct(localDocId, p.name); };
-    btns.append(eb,db2);
-    hdr.append(left,btns); card.append(hdr); el.append(card);
+    btns.append(stockBtn,eb,db2);
+    hdr.append(left,btns); card.append(hdr);
+
+    // Panel de stock, oculto por defecto
+    var stockWrap = document.createElement('div');
+    stockWrap.id = 'stockwrap-' + localDocId;
+    stockWrap.style.display = 'none';
+    stockWrap.style.marginTop = '.7rem';
+    stockWrap.style.paddingTop = '.7rem';
+    stockWrap.style.borderTop = '1px solid var(--border)';
+    card.append(stockWrap);
+
+    el.append(card);
   });
+};
+
+window.filterAdminProducts = function() {
+  var q = (document.getElementById('productsSearch').value||'').toLowerCase();
+  document.querySelectorAll('.prod-admin-card').forEach(function(c){
+    c.style.display = c.dataset.name.includes(q) ? '' : 'none';
+  });
+};
+
+window.toggleStockPanel = function(docId) {
+  var wrap = document.getElementById('stockwrap-' + docId);
+  if(!wrap) return;
+  if(wrap.style.display === 'block') { wrap.style.display = 'none'; return; }
+  // Cerrar otros paneles de stock abiertos
+  document.querySelectorAll('[id^="stockwrap-"]').forEach(function(w){ w.style.display = 'none'; });
+
+  var p = adminProducts.find(function(x){ return x._docId === docId; });
+  if(!p) return;
+  var sizes = (p.sizes||'').split(',').map(function(s){return s.trim();}).filter(Boolean);
+  var colors = (p.colors||[]).map(function(c){return typeof c==='object'?c.name:c;});
+  var stock = p.stock||{};
+  var variants = [];
+  if(sizes.length&&colors.length) sizes.forEach(function(s){colors.forEach(function(c){variants.push(s+' / '+c);});});
+  else if(sizes.length) sizes.forEach(function(s){variants.push(s);});
+  else variants.push('Único');
+
+  wrap.innerHTML = '';
+  var topRow = document.createElement('div');
+  topRow.style.cssText = 'display:flex;justify-content:space-between;align-items:center;margin-bottom:.6rem';
+  var lbl = document.createElement('div'); lbl.style.cssText = 'font-size:.75rem;font-weight:700;color:var(--muted)'; lbl.textContent = 'Stock por variante';
+  var saveBtn = document.createElement('button'); saveBtn.className='abtn save-s'; saveBtn.textContent='💾 Guardar stock';
+  saveBtn.onclick = function(){ window.saveStock(docId, p.name, variants.slice(), saveBtn); };
+  topRow.append(lbl, saveBtn);
+  wrap.append(topRow);
+
+  var grid = document.createElement('div'); grid.className='stock-grid';
+  variants.forEach(function(key){
+    var qty = parseInt(stock[key]||0);
+    var item = document.createElement('div');
+    item.className = 'stock-item'+(qty===0?' z':qty<=2?' lo':'');
+    var lblItem = document.createElement('div'); lblItem.className='stock-label'; lblItem.textContent=key;
+    var ctrl = document.createElement('div'); ctrl.className='stock-ctrl';
+    var inp = document.createElement('input');
+    inp.type='number'; inp.min='0'; inp.value=qty;
+    inp.id = 'stk-'+docId+'-'+key.replace(/[^a-z0-9]/gi,'_');
+    inp.onchange = function(){ saveBtn.style.background='#f59e0b'; };
+    var mn=document.createElement('button'); mn.textContent='−';
+    mn.onclick=function(){ inp.value=Math.max(0,parseInt(inp.value||0)-1); saveBtn.style.background='#f59e0b'; };
+    var pl=document.createElement('button'); pl.textContent='+';
+    pl.onclick=function(){ inp.value=parseInt(inp.value||0)+1; saveBtn.style.background='#f59e0b'; };
+    ctrl.append(mn,inp,pl); item.append(lblItem,ctrl); grid.append(item);
+  });
+  wrap.append(grid);
+  wrap.style.display = 'block';
 };
 
 window.adminOpenAddProduct = function() {
