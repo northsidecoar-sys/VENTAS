@@ -345,6 +345,7 @@
   <div class="tab" onclick="showTab('earlyaccess')">Early Access</div>
   <div class="tab" onclick="showTab('social')">Redes</div>
   <div class="tab" onclick="showTab('contacto')">Contacto</div>
+  <div class="tab" onclick="showTab('carritos')">🛒 Carritos abandonados</div>
 </div>
 
 <main>
@@ -558,6 +559,18 @@
       </div>
       <button class="abtn" onclick="window.saveContactAdmin()" style="align-self:flex-start">Guardar contacto</button>
     </div>
+  </div>
+
+  <!-- CARRITOS ABANDONADOS -->
+  <div class="pane" id="pane-carritos">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:16px 0 14px;flex-wrap:wrap;gap:10px">
+      <div style="font-family:'Syne',sans-serif;font-weight:700;font-size:0.95rem;">🛒 Carritos abandonados</div>
+      <button class="abtn sec" onclick="window.loadAbandonedCarts()">↺ Actualizar</button>
+    </div>
+    <div style="font-size:0.75rem;color:var(--muted);margin-bottom:16px;">
+      Personas que llegaron a poner su WhatsApp y dirección pero no terminaron de pagar. Podés mandarles un recordatorio manual.
+    </div>
+    <div id="abandonedCartsList"><div class="empty-msg">Cargando...</div></div>
   </div>
 
 
@@ -1358,9 +1371,93 @@ window.setFilt = function(filt, btn) {
 // ─────────────────────────────────────────────────────────
 // TABS
 // ─────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────
+// CARRITOS ABANDONADOS
+// ─────────────────────────────────────────────────────────
+window.loadAbandonedCarts = async function() {
+  const listEl = document.getElementById('abandonedCartsList');
+  if(!listEl) return;
+  listEl.innerHTML = '<div class="empty-msg">Cargando...</div>';
+  try {
+    const snap = await getDocs(collection(dbTienda, 'abandoned_carts'));
+    let carts = [];
+    snap.forEach(function(d){ carts.push(Object.assign({ _docId: d.id }, d.data())); });
+    // Solo mostrar los no completados, más recientes primero
+    carts = carts.filter(function(c){ return !c.completed; });
+    carts.sort(function(a,b){ return (b.updatedAt||0) - (a.updatedAt||0); });
+
+    if(!carts.length) {
+      listEl.innerHTML = '<div class="empty-msg">No hay carritos abandonados pendientes 🎉</div>';
+      return;
+    }
+
+    listEl.innerHTML = carts.map(function(c) {
+      const itemsTxt = (c.items||[]).map(function(i){
+        return i.name + ' (Talle: ' + (i.size||'—') + ', Color: ' + (i.color||'—') + ') x' + (i.qty||1);
+      }).join('<br>');
+      const date = c.updatedAt ? new Date(c.updatedAt).toLocaleString('es-AR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : '—';
+      const total = c.total ? '$' + Number(c.total).toLocaleString('es-AR') : '—';
+      const remindedBadge = c.reminded ? '<span style="font-size:0.65rem;background:rgba(99,102,241,0.15);color:#818cf8;padding:2px 8px;border-radius:10px;margin-left:8px;">Ya se le avisó</span>' : '';
+
+      return '<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;margin-bottom:12px;">' +
+        '<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px;flex-wrap:wrap;gap:8px;">' +
+          '<div>' +
+            '<div style="font-weight:700;font-size:0.9rem;">' + (c.userName||'Visitante') + remindedBadge + '</div>' +
+            '<div style="font-size:0.72rem;color:var(--muted);margin-top:2px;">📲 ' + (c.whatsapp||'—') + ' · ' + date + '</div>' +
+          '</div>' +
+          '<div style="font-size:0.95rem;font-weight:700;">' + total + '</div>' +
+        '</div>' +
+        '<div style="font-size:0.78rem;color:var(--fg);line-height:1.6;margin-bottom:12px;">' + itemsTxt + '</div>' +
+        '<div style="display:flex;gap:8px;flex-wrap:wrap;">' +
+          '<button class="abtn" onclick="window.sendAbandonedCartReminder(\'' + c._docId + '\')" style="background:#22c55e;border-color:#22c55e;color:#fff;">📲 Enviar recordatorio</button>' +
+          '<button class="abtn sec" onclick="window.dismissAbandonedCart(\'' + c._docId + '\')">Descartar</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+  } catch(e) {
+    listEl.innerHTML = '<div class="empty-msg">Error cargando carritos abandonados</div>';
+  }
+};
+
+window.sendAbandonedCartReminder = async function(docId) {
+  try {
+    const snap = await getDocs(collection(dbTienda, 'abandoned_carts'));
+    let cartData = null;
+    snap.forEach(function(d){ if(d.id === docId) cartData = d.data(); });
+    if(!cartData) { toast('No se encontró el carrito', 'err'); return; }
+
+    const phone = (cartData.whatsapp||'').replace(/\D/g,'');
+    const waNum = phone.startsWith('54') ? phone : '54' + phone;
+    const itemsList = (cartData.items||[]).map(function(i){ return '• ' + i.name + ' (Talle ' + (i.size||'—') + ')'; }).join('\n');
+    const msg = 'Hola ' + (cartData.userName||'') + '! Te escribimos desde Northside 👋\n\n' +
+      'Vimos que dejaste estos productos en tu carrito:\n' + itemsList + '\n\n' +
+      'Total: $' + Number(cartData.total||0).toLocaleString('es-AR') + '\n\n' +
+      '¿Necesitás ayuda para completar tu compra? ¡Escribinos y te ayudamos!';
+
+    window.open('https://wa.me/' + waNum + '?text=' + encodeURIComponent(msg), '_blank');
+
+    await setDoc(doc(dbTienda, 'abandoned_carts', docId), { reminded: true, remindedAt: Date.now() }, { merge: true });
+    toast('✓ Recordatorio enviado');
+    window.loadAbandonedCarts();
+  } catch(e) {
+    toast('Error enviando recordatorio', 'err');
+  }
+};
+
+window.dismissAbandonedCart = async function(docId) {
+  if(!confirm('¿Descartar este carrito de la lista?')) return;
+  try {
+    await setDoc(doc(dbTienda, 'abandoned_carts', docId), { completed: true }, { merge: true });
+    toast('Carrito descartado');
+    window.loadAbandonedCarts();
+  } catch(e) {
+    toast('Error al descartar', 'err');
+  }
+};
+
 window.showTab = function(t) {
   document.querySelectorAll('.tab').forEach((el,i) => {
-    const names = ['pedidos','resumen','productos','stock','banner','config','nueva','historial','earlyaccess','social','contacto'];
+    const names = ['pedidos','resumen','productos','stock','banner','config','nueva','historial','earlyaccess','social','contacto','carritos'];
     el.classList.toggle('active', names[i]===t);
   });
   document.querySelectorAll('.pane').forEach(function(p){ p.classList.remove('active'); });
@@ -1378,6 +1475,7 @@ window.showTab = function(t) {
   if(t==='earlyaccess') window.loadEarlyAccessAdmin();
   if(t==='social') window.loadSocialAdmin();
   if(t==='contacto') window.loadContactAdmin();
+  if(t==='carritos') window.loadAbandonedCarts();
 };
 
 // ─────────────────────────────────────────────────────────
