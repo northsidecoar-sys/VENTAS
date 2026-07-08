@@ -959,6 +959,17 @@
       <label>Talles (separados por coma)</label>
       <input id="pmSizes" placeholder="S, M, L, XL, XXL" oninput="window.updateProdPreview()">
     </div>
+    <!-- ── COLORES ── -->
+    <div class="pm-field" style="margin-bottom:.7rem">
+      <label>Colores</label>
+      <p style="font-size:.68rem;color:var(--muted);margin-bottom:.4rem">Elegí un color y un nombre, luego agregalo. Después le podés asignar una foto a cada color.</p>
+      <div style="display:flex;gap:.5rem;align-items:center;margin-bottom:.5rem">
+        <input type="color" id="pmColorPicker" value="#1a1612" style="width:42px;height:36px;padding:2px;border:1px solid var(--border);border-radius:6px;cursor:pointer;background:none">
+        <input id="pmColorName" placeholder="Nombre del color (ej: Negro)" style="flex:1">
+        <button type="button" class="abtn sec" style="white-space:nowrap" onclick="window.pmAddColor()">+ Agregar</button>
+      </div>
+      <div id="pmColorList" style="display:flex;flex-wrap:wrap;gap:.4rem"></div>
+    </div>
     <div class="pm-field" style="margin-bottom:.7rem">
       <label>Descripción</label>
       <textarea id="pmDesc" rows="3" style="resize:vertical"></textarea>
@@ -3401,6 +3412,39 @@ window.deleteCoupon = async function(code){
 
 // ── PRODUCT IMAGE MANAGEMENT ──────────────────────────────
 var pmCurrentImgs = [];
+var pmColors = [];
+
+function renderPmColorList() {
+  var el = document.getElementById('pmColorList');
+  if(!el) return;
+  el.innerHTML = pmColors.map(function(c, i) {
+    return '<div style="display:flex;align-items:center;gap:.4rem;background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:.25rem .6rem .25rem .35rem;font-size:.78rem">' +
+      '<div style="width:16px;height:16px;border-radius:50%;background:' + c.hex + ';border:1px solid rgba(255,255,255,.2);flex-shrink:0"></div>' +
+      '<span>' + c.name + '</span>' +
+      '<button type="button" onclick="window.pmRemoveColor(' + i + ')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.85rem;padding:0 .15rem">✕</button>' +
+    '</div>';
+  }).join('') || '<span style="font-size:.72rem;color:var(--muted)">Sin colores agregados</span>';
+  window.renderPmImgs();
+}
+
+window.pmAddColor = function() {
+  var hex = document.getElementById('pmColorPicker').value;
+  var name = document.getElementById('pmColorName').value.trim();
+  if(!name) { window.showToastVR('⚠️ Ponele un nombre al color'); return; }
+  pmColors.push({ name: name, hex: hex });
+  document.getElementById('pmColorName').value = '';
+  renderPmColorList();
+};
+
+window.pmRemoveColor = function(i) {
+  var removedName = pmColors[i] ? pmColors[i].name : null;
+  pmColors.splice(i, 1);
+  // Desasignar ese color de las imágenes que lo tenían
+  if(removedName) {
+    pmCurrentImgs.forEach(function(img){ if(img.color === removedName) img.color = ''; });
+  }
+  renderPmColorList();
+};
 
 window.renderPmImgs = function() {
   var grid = document.getElementById('pmImgsGrid');
@@ -3408,11 +3452,28 @@ window.renderPmImgs = function() {
   grid.innerHTML = '';
   pmCurrentImgs.forEach(function(img, i) {
     var wrap = document.createElement('div'); wrap.className = 'pm-img-thumb';
-    var im = document.createElement('img'); im.src = img.url||img.data||''; im.alt = '';
+    wrap.style.cssText = 'display:flex;flex-direction:column;gap:.25rem;width:70px;height:auto;overflow:visible;position:static;border:none;';
+    var imgBox = document.createElement('div');
+    imgBox.style.cssText = 'position:relative;width:70px;height:70px;border-radius:6px;overflow:hidden;border:1px solid var(--border)';
+    var im = document.createElement('img'); im.src = img.url||img.data||''; im.alt = ''; im.style.cssText='width:100%;height:100%;object-fit:cover';
     var del = document.createElement('button'); del.className = 'pm-img-del'; del.textContent = '✕';
     (function(idx){ del.onclick = function(e){ e.preventDefault(); pmCurrentImgs.splice(idx,1); window.renderPmImgs(); }; })(i);
-    wrap.append(im, del);
-    if(i===0){ var badge=document.createElement('div'); badge.className='pm-img-main-badge'; badge.textContent='MAIN'; wrap.append(badge); }
+    imgBox.append(im, del);
+    if(i===0){ var badge=document.createElement('div'); badge.className='pm-img-main-badge'; badge.textContent='MAIN'; imgBox.append(badge); }
+    wrap.append(imgBox);
+
+    var sel = document.createElement('select');
+    sel.style.cssText = 'width:70px;font-size:.6rem;padding:2px;border:1px solid var(--border);border-radius:4px;background:var(--surface);color:var(--fg)';
+    var optAll = document.createElement('option'); optAll.value = ''; optAll.textContent = 'Todos';
+    sel.append(optAll);
+    pmColors.forEach(function(c) {
+      var opt = document.createElement('option'); opt.value = c.name; opt.textContent = c.name;
+      if(img.color === c.name) opt.selected = true;
+      sel.append(opt);
+    });
+    (function(idx){ sel.onchange = function(){ pmCurrentImgs[idx].color = sel.value; }; })(i);
+    wrap.append(sel);
+
     grid.append(wrap);
   });
 };
@@ -3444,7 +3505,9 @@ window.handlePmImgUpload = async function(e) {
 var _baseAdminOpen = window.adminOpenAddProduct;
 window.adminOpenAddProduct = function() {
   pmCurrentImgs = [];
+  pmColors = [];
   _baseAdminOpen();
+  renderPmColorList();
   window.renderPmImgs();
   var pmg3 = document.getElementById('pmGender'); if(pmg3) pmg3.value = 'unisex';
   var st=document.getElementById('pmImgUploadStatus'); if(st) st.textContent='';
@@ -3455,8 +3518,10 @@ var _baseEditProduct = window.editProduct;
 window.editProduct = function(docId) {
   var p = adminProducts.find(function(x){ return x._docId===docId; });
   pmCurrentImgs = (p && p.imgs) ? JSON.parse(JSON.stringify(p.imgs)) : [];
+  pmColors = (p && p.colors) ? JSON.parse(JSON.stringify(p.colors)) : [];
   _baseEditProduct(docId);
   var pmg2 = document.getElementById('pmGender'); if(pmg2 && p) pmg2.value = p.gender||'unisex';
+  renderPmColorList();
   window.renderPmImgs();
   var st=document.getElementById('pmImgUploadStatus'); if(st) st.textContent='';
 };
@@ -3488,6 +3553,7 @@ window.saveProdModal = async function() {
     name:name, cat:cat, gender:gender, price:priceVal, sizes:sizes, desc:desc,
     originalPrice:(origPrice&&origPrice>priceVal?origPrice:null),
     imgs: pmCurrentImgs,
+    colors: pmColors,
     sizeGuide: sizeGuide.length ? sizeGuide : null,
     sizeGuideImg: sizeGuideImg
   };
@@ -3498,7 +3564,7 @@ window.saveProdModal = async function() {
       window.showToastVR('✅ "'+name+'" actualizado');
     } else {
       var newId = Date.now();
-      data.id=newId; data.order=newId; data.colors=[];
+      data.id=newId; data.order=newId;
       await addDoc(collection(dbTienda,'products'), data);
       window.showToastVR('✅ "'+name+'" creado');
     }
