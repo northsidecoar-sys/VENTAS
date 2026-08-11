@@ -38,8 +38,8 @@
   .notif-bell:hover{border-color:var(--accent3);color:var(--accent3);}
 
   /* ── TABS ── */
-  .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:57px;z-index:99;overflow-x:auto;}
-  .tab{flex:1;min-width:90px;padding:14px 10px;text-align:center;font-size:0.75rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:0.5px;white-space:nowrap;}
+  .tabs{display:flex;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:57px;z-index:99;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:thin;}
+  .tab{flex:0 0 auto;padding:14px 14px;text-align:center;font-size:0.75rem;cursor:pointer;color:var(--muted);border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:0.5px;white-space:nowrap;}
   .tab.active{color:var(--accent);border-bottom-color:var(--accent);}
   .tab .tbadge{display:inline-block;background:var(--accent);color:#0d0d0f;border-radius:10px;padding:1px 6px;font-size:0.6rem;margin-left:4px;font-weight:700;min-width:18px;text-align:center;}
   .tab .tbadge.danger{background:var(--accent2);}
@@ -77,6 +77,10 @@
   .stat-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px;}
   .stat-grid.four{grid-template-columns:repeat(4,1fr);}
   @media(max-width:500px){.stat-grid.four{grid-template-columns:repeat(2,1fr);}}
+  @media(max-width:600px){
+    .tab{padding:12px 10px;font-size:0.68rem;}
+    .tab .tbadge{margin-left:3px;padding:1px 5px;font-size:0.55rem;}
+  }
   .stat-box{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:4px;}
   .stat-box.accent{border-color:var(--accent);background:rgba(200,240,74,0.05);}
   .stat-box.success{border-color:var(--success);}
